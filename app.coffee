@@ -5,7 +5,7 @@ fs = require 'fs-extra'
 conf =
 	img_dir: 'preview'
 	url_key: 'preview_url'
-	tags: 'ideolo touhou'
+	tags: ''
 
 { kit, db } = nobone {
 	db: {
@@ -16,10 +16,8 @@ conf =
 kit.mkdirs(conf.img_dir).done()
 
 db.exec conf, (jdb, conf) ->
-	jdb.doc.conf = conf
-	jdb.doc._ = require 'lodash'
 	jdb.doc.post_list = []
-	jdb.doc.url_done ?= []
+	jdb.doc.post_done ?= []
 	jdb.doc.err_pages = {}
 	jdb.doc.err_imgs = {}
 	jdb.save()
@@ -95,9 +93,9 @@ download_url = (work) ->
 	db.exec (jdb) ->
 		jdb.send [
 			jdb.doc.post_list
-			jdb.doc.url_done
+			jdb.doc.post_done
 		]
-	.done ([post_list, url_done]) ->
+	.done ([post_list, post_done]) ->
 		if post_list.length == 0
 			if get_page_done and work.count == 0
 				work.stop_timer()
@@ -108,7 +106,7 @@ download_url = (work) ->
 		post = post_list.shift()
 		url = post[conf.url_key]
 
-		return if url_done.indexOf(url) > -1
+		return if post_done.indexOf(post.id) > -1
 
 		kit.log 'Download: '.cyan + decodeURIComponent(url)
 
@@ -128,8 +126,8 @@ download_url = (work) ->
 			work.done()
 			kit.log 'Image: '.cyan + decodeURIComponent(url)
 
-			db.exec url, (jdb, url) ->
-				jdb.doc.url_done.push url
+			db.exec post.id, (jdb, id) ->
+				jdb.doc.post_done.push id
 				jdb.save()
 
 		work.start()
