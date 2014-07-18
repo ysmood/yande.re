@@ -2,8 +2,9 @@ nobone = require 'nobone'
 Q = require 'q'
 fs = require 'fs-extra'
 
-img_dir = 'imgs'
-img_key = 'jpeg_url'
+conf =
+	img_dir: 'imgs'
+	img_key: 'jpeg_url'
 
 { kit, db } = nobone {
 	db: {
@@ -20,11 +21,12 @@ target = {
 		page: 0
 }
 
-kit.mkdirs(img_dir).done()
+kit.mkdirs(conf.img_dir).done()
 
 db.exec {
 	command: (jdb) ->
 		jdb.doc.img_url_list = []
+		jdb.doc.img_url_list_done ?= []
 		jdb.doc.img_url_done ?= []
 		jdb.doc.err_pages = {}
 		jdb.doc.err_imgs = {}
@@ -52,7 +54,7 @@ get_page = (target) ->
 		}
 	.done (body) ->
 		kit.log 'Page: '.cyan + decodeURIComponent(target_url)
-		list = JSON.parse(body).map (el) -> el[img_key]
+		list = JSON.parse(body).map (el) -> el[conf.img_key]
 
 		if list.length == 0
 			list_done = true
@@ -61,13 +63,22 @@ get_page = (target) ->
 		db.exec {
 			data: list
 			command: (jdb, list) ->
-				_ = require 'lodash'
-				jdb.doc.img_url_list = _.union jdb.doc.img_url_list, list
-				jdb.save()
-		}
-		.done()
+				jdb.doc.img_url_list = jdb.doc.img_url_list.concat list
 
-		get_page target
+				len = jdb.doc.img_url_list_done.length
+				jdb.doc.img_url_list_done = _.union(
+					jdb.doc.img_url_list_done
+					list
+				)
+
+				jdb.save len == jdb.doc.img_url_list_done.length
+		}
+		.done (nothing_new) ->
+			if nothing_new
+				list_done = true
+				return
+
+			get_page target
 
 working_tasks = 0
 max_working_tasks = 10
@@ -82,6 +93,9 @@ get_imgs = ->
 	.done ([img_url_list, img_url_done]) ->
 		if working_tasks > max_working_tasks or
 		img_url_list.length == 0
+			if list_done and working_tasks == 0
+				kit.log "All done.".green
+				clearInterval monitor
 			return
 
 		img_url = img_url_list.shift()
@@ -90,7 +104,7 @@ get_imgs = ->
 
 		kit.log 'Download: '.cyan + decodeURIComponent(img_url)
 
-		path = img_dir + '/' + kit.path.basename(decodeURIComponent img_url)
+		path = conf.img_dir + '/' + kit.path.basename(decodeURIComponent img_url)
 		kit.request {
 			url: img_url
 			res_pipe: fs.createWriteStream path
@@ -115,9 +129,6 @@ get_imgs = ->
 					jdb.doc.img_url_done.push img_url
 					jdb.save()
 			}
-
-			if list_done and working_tasks == 0
-				clearInterval monitor
 
 		working_tasks++
 
