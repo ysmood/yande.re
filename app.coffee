@@ -2,6 +2,9 @@ nobone = require 'nobone'
 Q = require 'q'
 fs = require 'fs-extra'
 
+img_dir = 'imgs'
+img_key = 'jpeg_url'
+
 { kit, db } = nobone {
 	db: {
 		db_path: 'yande.db'
@@ -17,7 +20,7 @@ target = {
 		page: 0
 }
 
-kit.mkdirs('imgs').done()
+kit.mkdirs(img_dir).done()
 
 db.exec {
 	command: (jdb) ->
@@ -49,7 +52,7 @@ get_page = (target) ->
 		}
 	.done (body) ->
 		kit.log 'Page: '.cyan + decodeURIComponent(target_url)
-		list = JSON.parse(body).map (el) -> el.jpeg_url
+		list = JSON.parse(body).map (el) -> el[img_key]
 
 		if list.length == 0
 			list_done = true
@@ -58,9 +61,11 @@ get_page = (target) ->
 		db.exec {
 			data: list
 			command: (jdb, list) ->
+				_ = require 'lodash'
 				jdb.doc.img_url_list = _.union jdb.doc.img_url_list, list
 				jdb.save()
 		}
+		.done()
 
 		get_page target
 
@@ -77,8 +82,6 @@ get_imgs = ->
 	.done ([img_url_list, img_url_done]) ->
 		if working_tasks > max_working_tasks or
 		img_url_list.length == 0
-			if list_done and working_tasks == 0
-				clearInterval monitor
 			return
 
 		img_url = img_url_list.shift()
@@ -87,7 +90,7 @@ get_imgs = ->
 
 		kit.log 'Download: '.cyan + decodeURIComponent(img_url)
 
-		path = 'imgs/' + kit.path.basename(decodeURIComponent img_url)
+		path = img_dir + '/' + kit.path.basename(decodeURIComponent img_url)
 		kit.request {
 			url: img_url
 			res_pipe: fs.createWriteStream path
@@ -112,6 +115,9 @@ get_imgs = ->
 					jdb.doc.img_url_done.push img_url
 					jdb.save()
 			}
+
+			if list_done and working_tasks == 0
+				clearInterval monitor
 
 		working_tasks++
 
