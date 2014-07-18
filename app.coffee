@@ -57,6 +57,7 @@ get_page = (work) ->
 		query:
 			tags: conf.tags
 			page: work.page_num++
+			limit: 100
 	}
 
 	target_url = kit.url.format(target)
