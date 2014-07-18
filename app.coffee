@@ -17,7 +17,7 @@ target = {
 	host: 'yande.re'
 	pathname: 'post.json'
 	query:
-		tags: 'ideolo'
+		tags: 'ideolo touhou'
 		page: 0
 }
 
@@ -95,8 +95,7 @@ get_imgs = ->
 		if working_tasks > max_working_tasks or
 		img_url_list.length == 0
 			if list_done and working_tasks == 0
-				kit.log "All done.".green
-				clearInterval monitor
+				all_done()
 			return
 
 		img_url = img_url_list.shift()
@@ -132,6 +131,11 @@ get_imgs = ->
 			}
 
 		working_tasks++
+
+all_done = ->
+	kit.log "All done.".green
+	clearInterval monitor
+	db.compact_db_file()
 
 get_page target
 

@@ -1,4 +1,5 @@
 imgs
 previews
 preview
+node_modules
 *.db
