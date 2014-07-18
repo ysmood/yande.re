@@ -63,6 +63,7 @@ get_page = (target) ->
 		db.exec {
 			data: list
 			command: (jdb, list) ->
+				_ = require 'lodash'
 				jdb.doc.img_url_list = jdb.doc.img_url_list.concat list
 
 				len = jdb.doc.img_url_list_done.length
