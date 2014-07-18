@@ -13,7 +13,7 @@ target = {
 	host: 'yande.re'
 	pathname: 'post.json'
 	query:
-		tags: 'ideolo thighhighs'
+		tags: 'ideolo'
 		page: 0
 }
 
@@ -58,7 +58,7 @@ get_page = (target) ->
 		db.exec {
 			data: list
 			command: (jdb, list) ->
-				jdb.doc.img_url_list = jdb.doc.img_url_list.concat list
+				jdb.doc.img_url_list = _.union jdb.doc.img_url_list, list
 				jdb.save()
 		}
 
