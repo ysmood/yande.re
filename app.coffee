@@ -140,21 +140,21 @@ get_page = (work) ->
 
 download_url = (work) ->
 	db.exec (jdb) ->
-		jdb.send [
-			jdb.doc.post_list
-			jdb.doc.post_done
-		]
-	.then ([post_list, post_done]) ->
-		if post_list.length == 0
+		jdb.save jdb.doc.post_list.shift()
+	.then (id) ->
+		kit.log 'Download: '.cyan + id
+
+		db.exec (jdb) ->
+			if jdb.doc.post_done.indexOf(id)
+				jdb.send null
+			else
+				jdb.send id
+	.then (id) ->
+		if not id
 			if get_page_done and work.count == 0
 				work.stop_timer()
-				db.compact_db_file()
 				kit.log "All done.".green
-			return
-
-		id = post_list.shift()
-		if post_done.indexOf(id) > -1
-			kit.log "Downloaded: id ".cyan + id
+				exit()
 			return
 
 		work.start()
@@ -167,8 +167,6 @@ download_url = (work) ->
 		return if not post
 
 		url = post[conf.url_key]
-
-		kit.log 'Download: '.cyan + decodeURIComponent(url)
 
 		path = conf.img_dir + '/' + kit.path.basename(decodeURIComponent url)
 		kit.request {
@@ -184,7 +182,7 @@ download_url = (work) ->
 				jdb.doc.err_imgs[data.url] = data.err
 				jdb.save()
 		.then ->
-			kit.log 'Image: '.cyan + decodeURIComponent(url)
+			kit.log 'Url done: '.cyan + [post.id, post.tags].join(' ')
 			post
 	.done (post) ->
 		return if not post
@@ -193,6 +191,17 @@ download_url = (work) ->
 		db.exec post.id, (jdb, id) ->
 			jdb.doc.post_done.push id
 			jdb.save()
+
+exit = (code = 0) ->
+	kit.log 'Compact DB...'
+	db.compact_db_file_sync()
+	process.exit code
+
+process.on 'SIGINT', exit
+
+process.on 'uncaughtException', (err) ->
+	kit.err err
+	code 1
 
 monitor get_page, 1
 monitor download_url
