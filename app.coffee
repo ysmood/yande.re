@@ -46,9 +46,8 @@ kit.mkdirs(conf.post_dir).done()
 
 db.exec conf, (jdb, conf) ->
 	jdb.doc.post_list ?= []
-	jdb.doc.post_done ?= []
 	jdb.doc.err_pages = {}
-	jdb.doc.err_imgs = {}
+	jdb.doc.err_posts = {}
 	jdb.save()
 
 # Monitor design mode.
@@ -110,13 +109,16 @@ get_page = (work) ->
 		# Save post list to disk.
 		Q.all list.map (post) ->
 			path = kit.path.join conf.post_dir, post.id + ''
-			kit.outputFile path, JSON.stringify(post)
+			kit.exists path
+			.then (exists) ->
+				if not exists
+					kit.outputFile path, JSON.stringify(post)
 		.then ->
 			list
 	.catch (err) ->
 		db.exec {
 			url: target_url
-			err: err.toString()
+			err: err.stack
 		}, (jdb, data) ->
 			jdb.doc.err_pages[data.url] = data.err
 			jdb.save()
@@ -142,22 +144,14 @@ download_url = (work) ->
 	db.exec (jdb) ->
 		jdb.save jdb.doc.post_list.shift()
 	.then (id) ->
-		return if not id
-
-		kit.log 'Download: '.cyan + id
-
-		db.exec (jdb) ->
-			if jdb.doc.post_done.indexOf(id)
-				jdb.send null
-			else
-				jdb.send id
-	.then (id) ->
-		if not id
+		if not id 
 			if get_page_done and work.count == 0
 				work.stop_timer()
 				kit.log "All done.".green
 				exit()
 			return
+
+		kit.log 'Download: '.cyan + id
 
 		work.start()
 
@@ -170,7 +164,7 @@ download_url = (work) ->
 
 		url = post[conf.url_key]
 
-		path = conf.img_dir + '/' + kit.path.basename(decodeURIComponent url)
+		path = conf.img_dir + "/#{post.id} " + kit.path.basename(decodeURIComponent post.file_url)[...120]
 		kit.request {
 			url: url
 			res_pipe: kit.fs.createWriteStream path
@@ -178,21 +172,18 @@ download_url = (work) ->
 		}
 		.catch (err) ->
 			db.exec  {
-				url
-				err: err.toString()
+				id: post.id
+				err: err.stack
 			}, (jdb, data) ->
-				jdb.doc.err_imgs[data.url] = data.err
+				jdb.doc.err_posts[data.id] = data.err
+				jdb.doc.post_list.push data.id
 				jdb.save()
 		.then ->
-			kit.log 'Url done: '.cyan + [post.id, post.tags].join(' ')
+			kit.log 'Url done: '.cyan + [post.id, post.tags].join(' ')[...120]
 			post
 	.done (post) ->
 		return if not post
-
 		work.done()
-		db.exec post.id, (jdb, id) ->
-			jdb.doc.post_done.push id
-			jdb.save()
 
 exit = (code = 0) ->
 	kit.log 'Compact DB...'
