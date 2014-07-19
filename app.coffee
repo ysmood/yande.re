@@ -76,12 +76,12 @@ monitor = (task, max_tasks = 10) ->
 		task work
 	, 30
 
+page_num = 0
+db.exec (jdb) ->
+	page_num = jdb.doc.page_num or 0
+
 get_page_done = false
 get_page = (work) ->
-	page_num = 0
-	db.exec (jdb) ->
-		page_num = jdb.doc.page_num or 0
-
 	target = {
 		protocol: 'https'
 		host: 'yande.re'
@@ -191,5 +191,5 @@ download_url = (work) ->
 			jdb.doc.post_done.push id
 			jdb.save()
 
-monitor get_page, 1
+monitor get_page, 10
 monitor download_url
