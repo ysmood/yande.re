@@ -91,11 +91,13 @@ get_page = (work) ->
 
 		# Save post list to disk.
 		Q.all list.map (post) ->
-			path = kit.path.join conf.post_dir, post.id
+			path = kit.path.join conf.post_dir, post.id + ''
 			kit.outputFile path, JSON.stringify(post)
 		.then ->
 			list
 	.done (list) ->
+		return if not list
+
 		work.done()
 
 		if work.is_all_done()
@@ -110,12 +112,11 @@ get_page = (work) ->
 			jdb.save()
 
 download_url = (work) ->
-	Q.fcall ->
-		db.exec (jdb) ->
-			jdb.send [
-				jdb.doc.post_list
-				jdb.doc.post_done
-			]
+	db.exec (jdb) ->
+		jdb.send [
+			jdb.doc.post_list
+			jdb.doc.post_done
+		]
 	.then ([post_list, post_done]) ->
 		if post_list.length == 0
 			if get_page_done and work.count == 0
@@ -129,12 +130,12 @@ download_url = (work) ->
 
 		work.start()
 
-		post_path = kit.path.join conf.post_dir, id
+		post_path = kit.path.join conf.post_dir, id + ''
 		kit.readFile post_path, 'utf8'
-	.then (data) ->
-		return if not data
-
-		post = JSON.parse data
+		.then (data) ->
+			post = JSON.parse data
+	.then (post) ->
+		return if not post
 
 		url = post[conf.url_key]
 
@@ -145,17 +146,20 @@ download_url = (work) ->
 			url: url
 			res_pipe: kit.fs.createWriteStream path
 		}
-	.catch (err) ->
-		db.exec  {
-			url
-			err: err.toString()
-		}, (jdb, data) ->
-			jdb.doc.err_imgs[data.url] = data.err
-			jdb.save()
-	.done ->
-		work.done()
-		kit.log 'Image: '.cyan + decodeURIComponent(url)
+		.catch (err) ->
+			db.exec  {
+				url
+				err: err.toString()
+			}, (jdb, data) ->
+				jdb.doc.err_imgs[data.url] = data.err
+				jdb.save()
+		.then ->
+			kit.log 'Image: '.cyan + decodeURIComponent(url)
+			post
+	.done (post) ->
+		return if not post
 
+		work.done()
 		db.exec post.id, (jdb, id) ->
 			jdb.doc.post_done.push id
 			jdb.save()
