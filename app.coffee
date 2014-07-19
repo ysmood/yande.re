@@ -84,13 +84,6 @@ get_page = (work) ->
 	kit.request {
 		url: target_url
 	}
-	.catch (err) ->
-		db.exec {
-			url: target_url
-			err: err.toString()
-		}, (jdb, data) ->
-			jdb.doc.err_pages[data.url] = data.err
-			jdb.save()
 	.then (body) ->
 		kit.log 'Page: '.cyan + decodeURIComponent(target_url)
 		list = JSON.parse(body)
@@ -105,6 +98,13 @@ get_page = (work) ->
 			kit.outputFile path, JSON.stringify(post)
 		.then ->
 			list
+	.catch (err) ->
+		db.exec {
+			url: target_url
+			err: err.toString()
+		}, (jdb, data) ->
+			jdb.doc.err_pages[data.url] = data.err
+			jdb.save()
 	.done (list) ->
 		return if not list
 
