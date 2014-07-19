@@ -1,6 +1,5 @@
 nobone = require 'nobone'
 Q = require 'q'
-fs = require 'fs-extra'
 
 conf =
 	img_dir: 'preview'
@@ -114,7 +113,7 @@ download_url = (work) ->
 		path = conf.img_dir + '/' + kit.path.basename(decodeURIComponent url)
 		kit.request {
 			url: url
-			res_pipe: fs.createWriteStream path
+			res_pipe: kit.fs.createWriteStream path
 		}
 		.catch (err) ->
 			db.exec  {
