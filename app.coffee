@@ -142,6 +142,8 @@ download_url = (work) ->
 	db.exec (jdb) ->
 		jdb.save jdb.doc.post_list.shift()
 	.then (id) ->
+		return if not id
+
 		kit.log 'Download: '.cyan + id
 
 		db.exec (jdb) ->
