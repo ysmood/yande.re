@@ -48,15 +48,11 @@ monitor = (task, max_tasks = 10) ->
 	, 30
 
 get_page_done = false
-page_num = 0
-
-db.exec (jdb) ->
-	jdb.send jdb.doc.page_num
-.done (num) ->
-	page_num = num or 0
-
 get_page = (work) ->
-	page_num ?= 0
+	page_num = 0
+	db.exec (jdb) ->
+		page_num = jdb.doc.page_num or 0
+
 	target = {
 		protocol: 'https'
 		host: 'yande.re'
