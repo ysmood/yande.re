@@ -1,0 +1,14 @@
+{
+	"folders":
+	[
+		{
+			"folder_exclude_patterns":
+			[
+				"preview",
+				"post"
+			],
+			"follow_symlinks": true,
+			"path": "."
+		}
+	]
+}

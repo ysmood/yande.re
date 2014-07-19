@@ -1,5 +1,7 @@
 imgs
 previews
 preview
+post
 node_modules
 *.db
+prj.sublime-workspace
