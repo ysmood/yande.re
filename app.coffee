@@ -144,7 +144,7 @@ download_url = (work) ->
 	db.exec (jdb) ->
 		jdb.save jdb.doc.post_list.shift()
 	.then (id) ->
-		if not id 
+		if not id
 			if get_page_done and work.count == 0
 				work.stop_timer()
 				kit.log "All done.".green
