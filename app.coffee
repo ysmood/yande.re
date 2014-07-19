@@ -50,6 +50,7 @@ monitor = (task, max_tasks = 10) ->
 		stop_timer: ->
 			is_all_done = true
 			clearInterval timer
+			kit.log 'Timer stopped.'.yellow
 		is_all_done: ->
 			is_all_done and count == 0
 	}
