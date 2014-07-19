@@ -74,7 +74,7 @@ monitor = (task, max_tasks = 10) ->
 			return
 		work.count = count
 		task work
-	, 30
+	, 10
 
 page_num = 0
 db.exec (jdb) ->
@@ -101,7 +101,6 @@ get_page = (work) ->
 		agent: conf.agent
 	}
 	.then (body) ->
-		kit.log 'Page: '.cyan + decodeURIComponent(target_url)
 		list = JSON.parse(body)
 
 		if list.length == 0
@@ -123,6 +122,8 @@ get_page = (work) ->
 			jdb.save()
 	.done (list) ->
 		return if not list
+
+		kit.log 'Page: '.cyan + " #{list.length} " + decodeURIComponent(target_url)
 
 		work.done()
 
@@ -152,7 +153,9 @@ download_url = (work) ->
 			return
 
 		id = post_list.shift()
-		return if post_done.indexOf(id) > -1
+		if post_done.indexOf(id) > -1
+			kit.log "Downloaded: id ".cyan + id
+			return
 
 		work.start()
 
@@ -191,5 +194,5 @@ download_url = (work) ->
 			jdb.doc.post_done.push id
 			jdb.save()
 
-monitor get_page, 10
+monitor get_page, 1
 monitor download_url
