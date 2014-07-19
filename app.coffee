@@ -19,13 +19,27 @@ conf = {
 
 	# Where to save the post info. They are all in json format.
 	post_dir: 'post'
+
+	# If you're using goagent on port '8087',
+	# you can set it with '127.0.0.1:8078'
+	proxy: null
 }
 
-{ kit, db } = nobone {
+{ kit, db, proxy } = nobone {
 	db: {
 		db_path: 'yande.db'
 	}
+	proxy: {}
 }
+
+if conf.proxy
+	conf.proxy = conf.proxy.split ":"
+	conf.agent = proxy.tunnel.httpsOverHttp {
+		proxy: {
+			host: conf.proxy[0]
+			port: conf.proxy[1]
+		}
+	}
 
 kit.mkdirs(conf.img_dir).done()
 kit.mkdirs(conf.post_dir).done()
@@ -84,6 +98,7 @@ get_page = (work) ->
 
 	kit.request {
 		url: target_url
+		agent: conf.agent
 	}
 	.then (body) ->
 		kit.log 'Page: '.cyan + decodeURIComponent(target_url)
@@ -156,6 +171,7 @@ download_url = (work) ->
 		kit.request {
 			url: url
 			res_pipe: kit.fs.createWriteStream path
+			agent: conf.agent
 		}
 		.catch (err) ->
 			db.exec  {
