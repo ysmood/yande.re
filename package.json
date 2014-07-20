@@ -1,0 +1,23 @@
+{
+  "name": "yande.re",
+  "version": "0.0.1",
+  "description": "A web crawler for yande.re",
+  "main": "app.coffee",
+  "scripts": {
+    "test": "cake test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ysmood/yande.re.git"
+  },
+  "keywords": [
+    "yande.re",
+    "crawler"
+  ],
+  "author": "http://ysmood.org",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ysmood/yande.re/issues"
+  },
+  "homepage": "https://github.com/ysmood/yande.re"
+}
