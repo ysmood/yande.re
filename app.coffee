@@ -50,6 +50,7 @@ db.exec conf, (jdb, conf) ->
 	jdb.doc.post_list ?= []
 	jdb.doc.err_pages ?= {}
 	jdb.doc.err_posts ?= {}
+	jdb.doc.page_num ?= 0
 	jdb.save()
 
 # Monitor design mode.
@@ -79,7 +80,7 @@ monitor = (task, max_tasks = 10) ->
 
 page_num = 0
 db.exec (jdb) ->
-	page_num = jdb.doc.page_num or 0
+	page_num = jdb.doc.page_num
 
 get_page_done = false
 get_page = (work) ->
@@ -120,7 +121,7 @@ get_page = (work) ->
 	.then (list) ->
 		return if not list
 
-		kit.log 'Page: '.cyan + " #{list.length} " + decodeURIComponent(target_url)
+		kit.log 'Page: '.cyan + "#{list.length} " + decodeURIComponent(target_url)
 
 		db.exec {
 			num: page_num
@@ -167,7 +168,7 @@ download_url = (work) ->
 
 		url = post[conf.url_key]
 
-		path = conf.img_dir + "/#{post.id} " + kit.path.basename(decodeURIComponent post.file_url)[...120]
+		path = conf.img_dir + '/' + kit.path.basename(decodeURIComponent post.file_url).replace('yande.re ', '')
 		kit.request {
 			url: url
 			res_pipe: kit.fs.createWriteStream path
