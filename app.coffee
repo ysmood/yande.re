@@ -161,7 +161,7 @@ download_url = (work) ->
 
 		url = post[conf.url_key]
 
-		path = conf.img_dir + '/' + kit.path.basename(decodeURIComponent post.file_url).replace('yande.re ', '')
+		path = conf.img_dir + "/#{post.id}" + kit.path.extname(post.file_url)
 		kit.request {
 			url: url
 			res_pipe: kit.fs.createWriteStream path
