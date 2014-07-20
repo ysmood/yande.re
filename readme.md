@@ -1,1 +1,1 @@
-# yande
+Don't abuse it!
