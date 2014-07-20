@@ -25,11 +25,13 @@ conf = {
 	proxy: null
 }
 
-{ kit, db, proxy } = nobone {
+{ kit, db, proxy, service, renderer } = nobone {
 	db: {
 		db_path: 'yande.db'
 	}
 	proxy: {}
+	service: {}
+	renderer: {}
 }
 
 if conf.proxy
@@ -46,8 +48,8 @@ kit.mkdirs(conf.post_dir).done()
 
 db.exec conf, (jdb, conf) ->
 	jdb.doc.post_list ?= []
-	jdb.doc.err_pages = {}
-	jdb.doc.err_posts = {}
+	jdb.doc.err_pages ?= {}
+	jdb.doc.err_posts ?= {}
 	jdb.save()
 
 # Monitor design mode.
@@ -81,6 +83,8 @@ db.exec (jdb) ->
 
 get_page_done = false
 get_page = (work) ->
+	work.start()
+
 	target = {
 		protocol: 'https'
 		host: 'yande.re'
@@ -92,8 +96,6 @@ get_page = (work) ->
 	}
 
 	target_url = kit.url.format(target)
-
-	work.start()
 
 	kit.request {
 		url: target_url
@@ -115,22 +117,10 @@ get_page = (work) ->
 					kit.outputFile path, JSON.stringify(post)
 		.then ->
 			list
-	.catch (err) ->
-		db.exec {
-			url: target_url
-			err: err.stack
-		}, (jdb, data) ->
-			jdb.doc.err_pages[data.url] = data.err
-			jdb.save()
-	.done (list) ->
+	.then (list) ->
 		return if not list
 
 		kit.log 'Page: '.cyan + " #{list.length} " + decodeURIComponent(target_url)
-
-		work.done()
-
-		if work.is_all_done()
-			get_page_done = true
 
 		db.exec {
 			num: page_num
@@ -139,8 +129,23 @@ get_page = (work) ->
 			jdb.doc.page_num = data.num
 			jdb.doc.post_list = jdb.doc.post_list.concat data.list
 			jdb.save()
+	.catch (err) ->
+		kit.err err
+		db.exec {
+			url: target_url
+			err: err.stack
+		}, (jdb, data) ->
+			jdb.doc.err_pages[data.url] = data.err
+			jdb.save()
+	.fin ->
+		work.done()
+
+		if work.is_all_done()
+			get_page_done = true
 
 download_url = (work) ->
+	work.start()
+
 	db.exec (jdb) ->
 		jdb.save jdb.doc.post_list.shift()
 	.then (id) ->
@@ -152,8 +157,6 @@ download_url = (work) ->
 			return
 
 		kit.log 'Download: '.cyan + id
-
-		work.start()
 
 		post_path = kit.path.join conf.post_dir, id + ''
 		kit.readFile post_path, 'utf8'
@@ -171,7 +174,8 @@ download_url = (work) ->
 			agent: conf.agent
 		}
 		.catch (err) ->
-			db.exec  {
+			kit.err err
+			db.exec {
 				id: post.id
 				err: err.stack
 			}, (jdb, data) ->
@@ -180,9 +184,7 @@ download_url = (work) ->
 				jdb.save()
 		.then ->
 			kit.log 'Url done: '.cyan + [post.id, post.tags].join(' ')[...120]
-			post
-	.done (post) ->
-		return if not post
+	.fin ->
 		work.done()
 
 exit = (code = 0) ->
@@ -198,3 +200,25 @@ process.on 'uncaughtException', (err) ->
 
 monitor get_page, 1
 monitor download_url
+
+service.get '/', (req, res) ->
+	db.exec (jdb) ->
+		jdb.send [
+			jdb.doc.post_list.length
+			jdb.doc.page_num
+		]
+	.then ([left, page_num]) ->
+		renderer.render 'index.ejs'
+		.then (tpl) ->
+			tpl {
+				left
+				page_num
+				nobone: nobone.client()
+			}
+	.done (page) ->
+		res.send page
+
+service.use renderer.static('client')
+
+service.listen 8019, ->
+	kit.open 'http://127.0.0.1:8019'
