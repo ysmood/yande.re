@@ -1,4 +1,4 @@
-# process.env.NODE_ENV = 'development'
+process.env.NODE_ENV = 'development'
 
 module.exports = {
 	# One of these: file_url, preview_url, sample_url, jpeg_url.

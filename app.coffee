@@ -256,12 +256,35 @@ init_web = ->
 		else
 			res.send 404
 
-	service.get '/viewer', (req, res) ->
+	service.get '/image/:id', (req, res) ->
+		id = req.params.id
+		kit.readFile 'post/' + id, 'utf8'
+		.done (str) ->
+			post = JSON.parse str
+			dir = kit.path.join conf.url_key, kit.pad(Math.floor(post.id / 1000), 4)
+			path = kit.path.join dir, post.id + kit.path.extname(post.file_url)
+			res.sendfile path
+
+	viewer = (req, res) ->
 		renderer.render 'viewer.ejs'
 		.done (tpl) ->
 			res.send tpl({
 				nobone: nobone.client()
 			})
+
+	service.get '/viewer', viewer
+	service.get '/viewer/*', viewer
+
+	ids = null
+	service.get '/page/:num', (req, res) ->
+		Q.fcall ->
+			if not ids
+				kit.readdir('post').then (rets) ->
+					ids = rets.sort (a, b) -> b - a
+		.done ->
+			num = +req.params.num * 100
+			page = ids[num ... num + 100]
+			res.send page
 
 	service.use renderer.static('client')
 
