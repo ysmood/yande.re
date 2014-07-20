@@ -49,6 +49,6 @@ set_state = ->
 
 auto_update = ->
 	set_state()
-	setInterval set_state, 2000
+	setInterval set_state, 1000
 
 auto_update()
