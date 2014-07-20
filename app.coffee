@@ -150,6 +150,7 @@ get_page = (work) ->
 		if work.is_all_done()
 			get_page_done = true
 
+last_download = null
 download_url = (work) ->
 	work.start()
 
@@ -190,6 +191,7 @@ download_url = (work) ->
 				jdb.doc.post_list.push data.id
 				jdb.save()
 		.then ->
+			last_download = path
 			db.exec (jdb) ->
 				jdb.doc.download_count++
 				jdb.save()
@@ -246,6 +248,12 @@ service.get '/stats', (req, res) ->
 		}
 	.then (data) ->
 		res.send data
+
+service.get '/last_download', (req, res) ->
+	if last_download
+		res.sendfile last_download
+	else
+		res.send 404
 
 service.use renderer.static('client')
 

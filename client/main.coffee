@@ -1,6 +1,17 @@
 $ = (sel, el = document) ->
 	document.querySelectorAll.call el, sel
 
+get = (path, callback) ->
+	xhr = new XMLHttpRequest
+	xhr.open 'GET', path
+	xhr.addEventListener 'readystatechange', ->
+		if xhr.readyState != 4
+			return
+
+		callback xhr.responseText
+
+	xhr.send()
+
 format_time = (stamp) ->
 	get_step = (unit) ->
 		step = Math.floor(stamp / unit)
@@ -22,15 +33,8 @@ format_time = (stamp) ->
 	d + ' day, ' + [h, m, s].map((el) -> pad el).join ':'
 
 set_state = ->
-	xhr = new XMLHttpRequest
-
-	xhr.open 'GET', '/stats'
-
-	xhr.addEventListener 'readystatechange', ->
-		if xhr.readyState != 4
-			return
-
-		data = JSON.parse xhr.responseText
+	get '/stats', (data) ->
+		data = JSON.parse data
 		$('.left')[0].textContent = data.left
 		$('.tasks')[0].textContent = data.tasks
 		$('.working_tasks')[0].textContent = data.working_tasks
@@ -38,11 +42,12 @@ set_state = ->
 		$('.duration')[0].textContent = format_time data.duration
 		$('.page')[0].textContent = data.page_num
 		$('.err')[0].textContent = data.err_count
+		$('.last_download')[0].textContent = data.err_count
 
-	xhr.send()
+	$('.last_download')[0].src = '/last_download?_=' + Date.now()
 
 auto_update = ->
 	set_state()
-	setInterval set_state, 1000
+	setInterval set_state, 2000
 
 auto_update()

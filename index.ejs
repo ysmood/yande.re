@@ -10,6 +10,12 @@
 
 <table>
 	<tr>
+		<td>Proxy</td>
+		<td class="proxy">
+			<%= conf.proxy || 'Use System' %>
+		</td>
+	</tr>
+	<tr>
 		<td>Task Left</td>
 		<td class="left"></td>
 	</tr>
@@ -38,9 +44,9 @@
 		<td class="err"></td>
 	</tr>
 	<tr>
-		<td>Proxy</td>
-		<td class="proxy">
-			<%= conf.proxy || 'Use System' %>
+		<td>Last Download</td>
+		<td>
+			<img class="last_download">
 		</td>
 	</tr>
 </table>
