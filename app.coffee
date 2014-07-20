@@ -205,6 +205,7 @@ auto_update_duration = ->
 		span = now - last_time
 		db.exec span, (jdb, span) ->
 			jdb.doc.duration += span
+			jdb.save()
 		last_time = now
 	, 500
 
