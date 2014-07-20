@@ -5,7 +5,8 @@
 			"folder_exclude_patterns":
 			[
 				"preview",
-				"post"
+				"post",
+				"*.bak"
 			],
 			"follow_symlinks": true,
 			"path": "."
