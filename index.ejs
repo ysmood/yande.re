@@ -6,28 +6,34 @@
 </head>
 <body>
 
+<h1>yande.re crawler</h1>
 
-<h2 class="left">
+<h3 class="left">
 	Left: <span></span>
-</h2>
-<h2 class="tasks">
+</h3>
+<h3 class="tasks">
 	Tasks: <span></span>
-</h2>
-<h2 class="working_tasks">
+</h3>
+<h3 class="working_tasks">
 	Downloading Tasks: <span></span>
-</h2>
-<h2 class="page">
+</h3>
+<h3 class="page">
 	Page: <span></span>
-</h2>
-<h2 class="download_count">
+</h3>
+<h3 class="download_count">
 	Download Count: <span></span>
-</h2>
-<h2 class="duration">
+</h3>
+<h3 class="duration">
 	Duration: <span></span>
-</h2>
-<h2 class="err">
+</h3>
+<h3 class="err">
 	Errors: <span></span>
-</h2>
+</h3>
+
+<h3>Config</h3>
+<pre>
+<%- JSON.stringify(conf, null, 4) %>
+</pre>
 
 <%- nobone %>
 <script type="text/javascript" src="/main.js"></script>

@@ -224,10 +224,12 @@ monitor get_page, 1
 monitor download_url
 auto_update_duration()
 
+# Web display
 service.get '/', (req, res) ->
 	renderer.render 'index.ejs'
 	.done (tpl) ->
 		res.send tpl({
+			conf
 			nobone: nobone.client()
 		})
 
