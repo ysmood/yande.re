@@ -51,10 +51,12 @@ db.exec conf, (jdb, conf) ->
 	jdb.doc.post_list ?= []
 	jdb.doc.err_pages ?= {}
 	jdb.doc.err_posts ?= {}
+	jdb.doc.download_count ?= 0
 	jdb.doc.page_num ?= 0
 	jdb.save()
 
 # Monitor design mode.
+work_list = []
 monitor = (task, max_tasks = 10) ->
 	count = 0
 	is_all_done = false
@@ -73,11 +75,13 @@ monitor = (task, max_tasks = 10) ->
 	}
 
 	timer = setInterval ->
-		if count >= max_tasks
+		if count > max_tasks
 			return
 		work.count = count
 		task work
 	, 10
+
+	work_list.push work
 
 page_num = 0
 db.exec (jdb) ->
@@ -185,6 +189,9 @@ download_url = (work) ->
 				jdb.doc.post_list.push data.id
 				jdb.save()
 		.then ->
+			db.exec (jdb) ->
+				jdb.doc.download_count++
+				jdb.save()
 			kit.log 'Url done: '.cyan + [post.id, post.tags].join(' ')[...120]
 	.fin ->
 		work.done()
@@ -215,7 +222,9 @@ service.get '/stats', (req, res) ->
 		jdb.send {
 			left: jdb.doc.post_list[0]
 			tasks: jdb.doc.post_list.length
+			working_tasks: work_list.reduce ((sum, el) -> sum += el.count), 0
 			page_num: jdb.doc.page_num
+			download_count: jdb.doc.download_count
 			err_count: _.keys(jdb.doc.err_pages).length + _.keys(jdb.doc.err_posts).length
 		}
 	.then (data) ->
