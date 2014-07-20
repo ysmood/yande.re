@@ -7,24 +7,7 @@
 nobone = require 'nobone'
 Q = require 'q'
 _ = require 'lodash'
-
-conf = {
-	# One of these: file_url, preview_url, sample_url, jpeg_url.
-	url_key: 'preview_url'
-
-	# Where to save the downloaded file.
-	img_dir: 'preview'
-
-	# search filter, for example 'rating:safe kantoku'.
-	tags: ''
-
-	# Where to save the post info. They are all in json format.
-	post_dir: 'post'
-
-	# For example, if you're using goagent on port '8087',
-	# you can set it with '127.0.0.1:8078'
-	proxy: null
-}
+conf = require './conf'
 
 { kit, db, proxy, service, renderer } = nobone {
 	db: {
@@ -120,7 +103,10 @@ get_page = (work) ->
 			path = kit.path.join conf.post_dir, post.id + ''
 			kit.exists path
 			.then (exists) ->
-				if not exists
+				if exists
+					if conf.mode == 'diff'
+						work.stop_timer()
+				else
 					kit.outputFile path, JSON.stringify(post)
 		.then ->
 			list
