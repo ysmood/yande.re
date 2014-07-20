@@ -52,6 +52,7 @@ db.exec conf, (jdb, conf) ->
 	jdb.doc.err_pages ?= {}
 	jdb.doc.err_posts ?= {}
 	jdb.doc.download_count ?= 0
+	jdb.doc.duration ?= 0
 	jdb.doc.page_num ?= 0
 	jdb.save()
 
@@ -196,6 +197,17 @@ download_url = (work) ->
 	.fin ->
 		work.done()
 
+auto_update_duration = ->
+	# Calc the download duration.
+	last_time = Date.now()
+	setInterval ->
+		now = Date.now()
+		span = now - last_time
+		db.exec span, (jdb, span) ->
+			jdb.doc.duration += span
+		last_time = now
+	, 500
+
 exit = (code = 0) ->
 	kit.log 'Compact DB...'
 	db.compact_db_file_sync()
@@ -209,6 +221,7 @@ process.on 'uncaughtException', (err) ->
 
 monitor get_page, 1
 monitor download_url
+auto_update_duration()
 
 service.get '/', (req, res) ->
 	renderer.render 'index.ejs'
@@ -225,6 +238,7 @@ service.get '/stats', (req, res) ->
 			working_tasks: work_list.reduce ((sum, el) -> sum += el.count), 0
 			page_num: jdb.doc.page_num
 			download_count: jdb.doc.download_count
+			duration: jdb.doc.duration
 			err_count: _.keys(jdb.doc.err_pages).length + _.keys(jdb.doc.err_posts).length
 		}
 	.then (data) ->

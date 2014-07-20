@@ -15,6 +15,10 @@ set_state = ->
 		$('.tasks span')[0].textContent = data.tasks
 		$('.working_tasks span')[0].textContent = data.working_tasks
 		$('.download_count span')[0].textContent = data.download_count
+
+		time = new Date data.duration
+		$('.duration span')[0].textContent = "#{time.getMinutes()}:#{time.getSeconds()}"
+
 		$('.page span')[0].textContent = data.page_num
 		$('.err span')[0].textContent = data.err_count
 
