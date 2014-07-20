@@ -27,9 +27,6 @@ if conf.proxy
 		}
 	}
 
-kit.mkdirs(conf.img_dir).done()
-kit.mkdirs(conf.post_dir).done()
-
 db.exec conf, (jdb, conf) ->
 	jdb.doc.post_list ?= []
 	jdb.doc.err_pages ?= {}
@@ -100,7 +97,7 @@ get_page = (work) ->
 
 		# Save post list to disk.
 		Q.all list.map (post) ->
-			path = kit.path.join conf.post_dir, post.id + ''
+			path = kit.path.join 'post', post.id + ''
 			kit.exists path
 			.then (exists) ->
 				if exists
@@ -152,7 +149,7 @@ download_url = (work) ->
 
 		kit.log 'Download: '.cyan + id
 
-		post_path = kit.path.join conf.post_dir, id + ''
+		post_path = kit.path.join 'post', id + ''
 		kit.readFile post_path, 'utf8'
 		.then (data) ->
 			post = JSON.parse data
@@ -161,12 +158,19 @@ download_url = (work) ->
 
 		url = post[conf.url_key]
 
-		path = conf.img_dir + "/#{post.id}" + kit.path.extname(post.file_url)
-		kit.request {
-			url: url
-			res_pipe: kit.fs.createWriteStream path
-			agent: conf.agent
-		}
+		dir = kit.path.join conf.url_key, kit.pad(Math.floor(post.id / 1000), 4)
+		path = kit.path.join dir, post.id + kit.path.extname(post.file_url)
+
+		kit.exists (dir)
+		.then (exists) ->
+			if not exists
+				kit.mkdirs dir
+		.then ->
+			kit.request {
+				url: url
+				res_pipe: kit.fs.createWriteStream path
+				agent: conf.agent
+			}
 		.catch (err) ->
 			kit.log err
 			db.exec {
