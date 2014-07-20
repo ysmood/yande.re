@@ -137,7 +137,7 @@ get_page = (work) ->
 			jdb.doc.post_list = jdb.doc.post_list.concat data.list
 			jdb.save()
 	.catch (err) ->
-		kit.err err
+		kit.log err
 		db.exec {
 			url: target_url
 			err: err.stack
@@ -181,7 +181,7 @@ download_url = (work) ->
 			agent: conf.agent
 		}
 		.catch (err) ->
-			kit.err err
+			kit.log err
 			db.exec {
 				id: post.id
 				err: err.stack
@@ -216,7 +216,7 @@ exit = (code = 0) ->
 process.on 'SIGINT', exit
 
 process.on 'uncaughtException', (err) ->
-	kit.err err.stack
+	kit.log err.stack
 	process.exit 1
 
 monitor get_page, 1
