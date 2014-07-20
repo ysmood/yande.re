@@ -256,6 +256,9 @@ init_web = ->
 		else
 			res.send 404
 
+	service.get '/post/:id', (req, res) ->
+		res.sendfile 'post/' + req.params.id
+
 	service.get '/image/:id', (req, res) ->
 		id = req.params.id
 		kit.readFile 'post/' + id, 'utf8'
