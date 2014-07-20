@@ -245,6 +245,13 @@ service.get '/last_download', (req, res) ->
 	else
 		res.send 404
 
+service.get '/viewer', (req, res) ->
+	renderer.render 'viewer.ejs'
+	.done (tpl) ->
+		res.send tpl({
+			nobone: nobone.client()
+		})
+
 service.use renderer.static('client')
 
 service.listen 8019, ->
