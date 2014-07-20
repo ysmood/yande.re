@@ -4,6 +4,11 @@
 	Don't be Evil!
 ###
 
+Q = require 'q'
+_ = require 'lodash'
+conf = require './conf'
+task_list = []
+
 nobone = require 'nobone'
 { kit, db, proxy, service, renderer } = nobone {
 	db: {
@@ -13,11 +18,6 @@ nobone = require 'nobone'
 	service: {}
 	renderer: {}
 }
-
-Q = require 'q'
-_ = require 'lodash'
-conf = require './conf'
-task_list = []
 
 class Get_page
 
