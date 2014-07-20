@@ -31,13 +31,13 @@ set_state = ->
 			return
 
 		data = JSON.parse xhr.responseText
-		$('.left span')[0].textContent = data.left
-		$('.tasks span')[0].textContent = data.tasks
-		$('.working_tasks span')[0].textContent = data.working_tasks
-		$('.download_count span')[0].textContent = data.download_count
-		$('.duration span')[0].textContent = format_time data.duration
-		$('.page span')[0].textContent = data.page_num
-		$('.err span')[0].textContent = data.err_count
+		$('.left')[0].textContent = data.left
+		$('.tasks')[0].textContent = data.tasks
+		$('.working_tasks')[0].textContent = data.working_tasks
+		$('.download_count')[0].textContent = data.download_count
+		$('.duration')[0].textContent = format_time data.duration
+		$('.page')[0].textContent = data.page_num
+		$('.err')[0].textContent = data.err_count
 
 	xhr.send()
 

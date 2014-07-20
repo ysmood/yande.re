@@ -8,32 +8,42 @@
 
 <h1>yande.re crawler</h1>
 
-<h3 class="left">
-	Left: <span></span>
-</h3>
-<h3 class="tasks">
-	Tasks: <span></span>
-</h3>
-<h3 class="working_tasks">
-	Downloading Tasks: <span></span>
-</h3>
-<h3 class="page">
-	Page: <span></span>
-</h3>
-<h3 class="download_count">
-	Download Count: <span></span>
-</h3>
-<h3 class="duration">
-	Duration: <span></span>
-</h3>
-<h3 class="err">
-	Errors: <span></span>
-</h3>
-
-<h3>Config</h3>
-<pre>
-<%- JSON.stringify(conf, null, 4) %>
-</pre>
+<table>
+	<tr>
+		<td>Task Left</td>
+		<td class="left"></td>
+	</tr>
+	<tr>
+		<td>Tasks</td>
+		<td class="tasks"></td>
+	</tr>
+	<tr>
+		<td>Threads</td>
+		<td class="working_tasks"></td>
+	</tr>
+	<tr>
+		<td>Page</td>
+		<td class="page"></td>
+	</tr>
+	<tr>
+		<td>Downloaded</td>
+		<td class="download_count"></td>
+	</tr>
+	<tr>
+		<td>Duration</td>
+		<td class="duration"></td>
+	</tr>
+	<tr>
+		<td>Errors</td>
+		<td class="err"></td>
+	</tr>
+	<tr>
+		<td>Proxy</td>
+		<td class="proxy">
+			<%= conf.proxy || 'Use System' %>
+		</td>
+	</tr>
+</table>
 
 <%- nobone %>
 <script type="text/javascript" src="/main.js"></script>
