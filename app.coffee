@@ -5,10 +5,6 @@
 ###
 
 nobone = require 'nobone'
-Q = require 'q'
-_ = require 'lodash'
-conf = require './conf'
-
 { kit, db, proxy, service, renderer } = nobone {
 	db: {
 		db_path: 'yande.db'
@@ -18,58 +14,15 @@ conf = require './conf'
 	renderer: {}
 }
 
-if conf.proxy
-	conf.proxy = conf.proxy.split ":"
-	conf.agent = proxy.tunnel.httpsOverHttp {
-		proxy: {
-			host: conf.proxy[0]
-			port: conf.proxy[1]
-		}
-	}
-
-db.exec conf, (jdb, conf) ->
-	jdb.doc.post_list ?= []
-	jdb.doc.err_pages ?= {}
-	jdb.doc.err_posts ?= {}
-	jdb.doc.download_count ?= 0
-	jdb.doc.duration ?= 0
-	jdb.doc.page_num ?= 0
-	jdb.save()
-
-# Monitor design mode.
+Q = require 'q'
+_ = require 'lodash'
+conf = require './conf'
 task_list = []
-monitor = (task, max_tasks = 10) ->
-	count = 0
-	is_all_done = false
-
-	work = {
-		start: ->
-			++count
-		done: (ref) ->
-			--count
-			_.remove task_list, (el) -> ref == el
-		stop_timer: ->
-			is_all_done = true
-			clearInterval timer
-			kit.log 'Timer stopped.'.yellow
-		is_all_done: ->
-			is_all_done and count == 0
-	}
-
-	timer = setInterval ->
-		if count > max_tasks
-			return
-		work.count = count
-		task_list.push(new task(work))
-	, 10
-
-page_num = 0
-db.exec (jdb) ->
-	page_num = jdb.doc.page_num
 
 class Get_page
 
 	@all_done: false
+	@page_num: 0
 
 	constructor: (work) ->
 		self = @
@@ -82,7 +35,7 @@ class Get_page
 			pathname: 'post.json'
 			query:
 				tags: conf.tags
-				page: ++page_num
+				page: ++Get_page.page_num
 				limit: 50
 		}
 
@@ -117,7 +70,7 @@ class Get_page
 			kit.log 'Page: '.cyan + "#{list.length} " + decodeURIComponent(target_url)
 
 			db.exec {
-				num: page_num
+				num: Get_page.page_num
 				list: list.map((el) -> el.id)
 			}, (jdb, data) ->
 				jdb.doc.page_num = data.num
@@ -200,6 +153,54 @@ class Download_url
 		.fin ->
 			work.done self
 
+init_basic = ->
+	if conf.proxy
+		conf.proxy = conf.proxy.split ":"
+		conf.agent = proxy.tunnel.httpsOverHttp {
+			proxy: {
+				host: conf.proxy[0]
+				port: conf.proxy[1]
+			}
+		}
+
+	db.exec conf, (jdb, conf) ->
+		jdb.doc.post_list ?= []
+		jdb.doc.err_pages ?= {}
+		jdb.doc.err_posts ?= {}
+		jdb.doc.download_count ?= 0
+		jdb.doc.duration ?= 0
+		jdb.doc.page_num ?= 0
+		jdb.save()
+
+	db.exec (jdb) ->
+		Get_page.page_num = jdb.doc.page_num
+
+# Monitor design mode.
+monitor = (task, max_tasks = 10) ->
+	count = 0
+	is_all_done = false
+
+	work = {
+		start: ->
+			++count
+		done: (ref) ->
+			--count
+			_.remove task_list, (el) -> ref == el
+		stop_timer: ->
+			is_all_done = true
+			clearInterval timer
+			kit.log 'Timer stopped.'.yellow
+		is_all_done: ->
+			is_all_done and count == 0
+	}
+
+	timer = setInterval ->
+		if count > max_tasks
+			return
+		work.count = count
+		task_list.push(new task(work))
+	, 10
+
 auto_update_duration = ->
 	# Calc the download duration.
 	last_time = Date.now()
@@ -226,53 +227,62 @@ exit = (code = 0) ->
 
 		process.exit code
 
-process.on 'SIGINT', exit
+init_web = ->
+	service.get '/', (req, res) ->
+		renderer.render 'index.ejs'
+		.done (tpl) ->
+			res.send tpl({
+				conf
+				nobone: nobone.client()
+			})
 
-process.on 'uncaughtException', (err) ->
-	kit.log err.stack
-	exit 1
+	service.get '/stats', (req, res) ->
+		db.exec (jdb) ->
+			jdb.send {
+				left: jdb.doc.post_list[0]
+				tasks: jdb.doc.post_list.length
+				working_tasks: task_list.length
+				page_num: jdb.doc.page_num
+				download_count: jdb.doc.download_count
+				duration: jdb.doc.duration
+				err_count: _.keys(jdb.doc.err_pages).length + _.keys(jdb.doc.err_posts).length
+			}
+		.then (data) ->
+			res.send data
 
-monitor Get_page, 1
-monitor Download_url
-auto_update_duration()
+	service.get '/last_download', (req, res) ->
+		if Download_url.last_download
+			res.sendfile Download_url.last_download
+		else
+			res.send 404
 
-# Web display
-service.get '/', (req, res) ->
-	renderer.render 'index.ejs'
-	.done (tpl) ->
-		res.send tpl({
-			conf
-			nobone: nobone.client()
-		})
+	service.get '/viewer', (req, res) ->
+		renderer.render 'viewer.ejs'
+		.done (tpl) ->
+			res.send tpl({
+				nobone: nobone.client()
+			})
 
-service.get '/stats', (req, res) ->
-	db.exec (jdb) ->
-		jdb.send {
-			left: jdb.doc.post_list[0]
-			tasks: jdb.doc.post_list.length
-			working_tasks: task_list.length
-			page_num: jdb.doc.page_num
-			download_count: jdb.doc.download_count
-			duration: jdb.doc.duration
-			err_count: _.keys(jdb.doc.err_pages).length + _.keys(jdb.doc.err_posts).length
-		}
-	.then (data) ->
-		res.send data
+	service.use renderer.static('client')
 
-service.get '/last_download', (req, res) ->
-	if Download_url.last_download
-		res.sendfile Download_url.last_download
-	else
-		res.send 404
+	service.listen 8019, ->
+		kit.open 'http://127.0.0.1:8019'
 
-service.get '/viewer', (req, res) ->
-	renderer.render 'viewer.ejs'
-	.done (tpl) ->
-		res.send tpl({
-			nobone: nobone.client()
-		})
+init_err_handlers = ->
+	process.on 'SIGINT', exit
 
-service.use renderer.static('client')
+	process.on 'uncaughtException', (err) ->
+		kit.log err.stack
+		exit 1
 
-service.listen 8019, ->
-	kit.open 'http://127.0.0.1:8019'
+launch = ->
+	init_basic()
+	init_err_handlers()
+
+	monitor Get_page, 1
+	monitor Download_url
+	auto_update_duration()
+
+	init_web()
+
+launch()
