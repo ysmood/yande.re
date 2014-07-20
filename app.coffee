@@ -196,8 +196,8 @@ exit = (code = 0) ->
 process.on 'SIGINT', exit
 
 process.on 'uncaughtException', (err) ->
-	kit.err err
-	code 1
+	kit.err err.stack
+	process.exit 1
 
 monitor get_page, 1
 monitor download_url
