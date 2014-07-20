@@ -6,6 +6,7 @@
 
 nobone = require 'nobone'
 Q = require 'q'
+_ = require 'lodash'
 
 conf = {
 	# One of these: file_url, preview_url, sample_url, jpeg_url.
@@ -203,21 +204,22 @@ monitor get_page, 1
 monitor download_url
 
 service.get '/', (req, res) ->
+	renderer.render 'index.ejs'
+	.done (tpl) ->
+		res.send tpl({
+			nobone: nobone.client()
+		})
+
+service.get '/stats', (req, res) ->
 	db.exec (jdb) ->
-		jdb.send [
-			jdb.doc.post_list.length
-			jdb.doc.page_num
-		]
-	.then ([left, page_num]) ->
-		renderer.render 'index.ejs'
-		.then (tpl) ->
-			tpl {
-				left
-				page_num
-				nobone: nobone.client()
-			}
-	.done (page) ->
-		res.send page
+		jdb.send {
+			left: jdb.doc.post_list[0]
+			tasks: jdb.doc.post_list.length
+			page_num: jdb.doc.page_num
+			err_count: _.keys(jdb.doc.err_pages).length + _.keys(jdb.doc.err_posts).length
+		}
+	.then (data) ->
+		res.send data
 
 service.use renderer.static('client')
 
