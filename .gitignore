@@ -5,3 +5,4 @@ post
 node_modules
 *.db
 prj.sublime-workspace
+*.bak
