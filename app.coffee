@@ -48,16 +48,21 @@ class Get_page
 					return
 
 				# Save post list to disk.
+				nothing_new = false
+				exists_count = 0
 				Q.all list.map (post) ->
 					path = kit.path.join 'post', post.id + ''
 					kit.exists path
 					.then (exists) ->
 						if exists
-							if conf.mode == 'diff'
+							if ++exists_count == list.length and
+							conf.mode == 'diff'
 								work.stop_timer()
+								nothing_new = true
 						else
 							kit.outputFile path, JSON.stringify(post)
 				.then ->
+					return if nothing_new
 					list
 			.then (list) ->
 				return if not list
@@ -195,6 +200,9 @@ init_basic = ->
 		for k, v of jdb.doc.err_pages
 			jdb.doc.err_page_urls.push k
 
+	if conf.mode == 'diff'
+		Get_page.page_num = 0
+
 # Monitor design mode.
 monitor = (task, max_tasks = 10) ->
 	count = 0
@@ -209,7 +217,7 @@ monitor = (task, max_tasks = 10) ->
 		stop_timer: ->
 			is_all_done = true
 			clearInterval timer
-			kit.log 'Timer stopped.'.yellow
+			kit.log 'Timer stopped:'.yellow
 		is_all_done: ->
 			is_all_done and count == 0
 	}
