@@ -1,4 +1,4 @@
-process.env.NODE_ENV = 'development'
+# process.env.NODE_ENV = 'development'
 
 module.exports = {
 
@@ -14,9 +14,10 @@ module.exports = {
 	# you can set it with '127.0.0.1:8078'
 	proxy: null
 
-	# By default, download all
+	# `default` by default, download all.
 	# `diff` mode will try to download the newly added posts.
-	mode: 'all'
+	# `err` mode will try to download all the errored url.
+	mode: 'default'
 
 	# Automatically open the monitor page.
 	auto_open_page: true

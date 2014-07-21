@@ -22,21 +22,25 @@ nobone = require 'nobone'
 class Get_page
 
 	@all_done: false
-	@page_num: 0
 
 	constructor: (work) ->
 		self = @
 
 		work.start()
 
-		Get_page.url_iter().done download
-
 		download = (url) ->
-			kit.request {
-				url: url
-				agent: conf.agent
-			}
+			Q.fcall ->
+				return if not url
+
+				kit.request {
+					url
+					agent: conf.agent
+				}
 			.then (body) ->
+				if not body
+					work.stop_timer()
+					return
+
 				list = JSON.parse(body)
 
 				if list.length == 0
@@ -61,16 +65,18 @@ class Get_page
 				kit.log 'Page: '.cyan + "#{list.length} " + decodeURIComponent(url)
 
 				db.exec {
+					url
 					num: Get_page.page_num
 					list: list.map((el) -> el.id)
 				}, (jdb, data) ->
 					jdb.doc.page_num = data.num
 					jdb.doc.post_list = jdb.doc.post_list.concat data.list
+					delete jdb.doc.err_pages[data.url]
 					jdb.save()
 			.catch (err) ->
 				kit.log err
 				db.exec {
-					url: url
+					url
 					err: err.stack
 				}, (jdb, data) ->
 					jdb.doc.err_pages[data.url] = data.err
@@ -80,18 +86,17 @@ class Get_page
 
 				if work.is_all_done()
 					Get_page.all_done = true
+					kit.log 'Get_page All_done'.yellow
+
+		Get_page.url_iter().done download
 
 	@url_iter: ->
-		db.exec (jdb) ->
-			url = null
-			for k, v of jdb.doc.err_pages
-				url = k
-				delete jdb.doc.err_pages[k]
-			jdb.save url
-		.then (url) ->
-			return url if url
-
-			kit.url.format {
+		if conf.mode == 'err'
+			db.exec (jdb) ->
+				url = jdb.doc.err_page_urls.shift()
+				jdb.save url
+		else
+			Q kit.url.format {
 				protocol: 'https'
 				host: 'yande.re'
 				pathname: 'post.json'
@@ -173,10 +178,11 @@ init_basic = ->
 			}
 		}
 
+	# Database
 	db.exec conf, (jdb, conf) ->
 		jdb.doc.post_list ?= []
 		jdb.doc.err_pages ?= {}
-		jdb.doc.err_posts ?= {}
+		jdb.doc.err_posts = {}
 		jdb.doc.download_count ?= 0
 		jdb.doc.duration ?= 0
 		jdb.doc.page_num ?= 0
@@ -184,6 +190,10 @@ init_basic = ->
 
 	db.exec (jdb) ->
 		Get_page.page_num = jdb.doc.page_num
+
+		jdb.doc.err_page_urls = []
+		for k, v of jdb.doc.err_pages
+			jdb.doc.err_page_urls.push k
 
 # Monitor design mode.
 monitor = (task, max_tasks = 10) ->
@@ -228,6 +238,7 @@ exit = (code = 0) ->
 
 	db.exec ids, (jdb, ids) ->
 		for id in ids
+			continue if not id
 			jdb.doc.post_list.unshift id
 		jdb.save()
 	.done ->
