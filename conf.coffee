@@ -1,6 +1,9 @@
 process.env.NODE_ENV = 'development'
 
 module.exports = {
+
+	port: 8019
+
 	# One of these: file_url, preview_url, sample_url, jpeg_url.
 	url_key: 'preview_url'
 
@@ -14,4 +17,7 @@ module.exports = {
 	# By default, download all
 	# `diff` mode will try to download the newly added posts.
 	mode: 'all'
+
+	# Automatically open the monitor page.
+	auto_open_page: true
 }

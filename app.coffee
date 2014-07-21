@@ -29,66 +29,77 @@ class Get_page
 
 		work.start()
 
-		target = {
-			protocol: 'https'
-			host: 'yande.re'
-			pathname: 'post.json'
-			query:
-				tags: conf.tags
-				page: ++Get_page.page_num
-				limit: 50
-		}
+		Get_page.url_iter().done download
 
-		target_url = kit.url.format(target)
+		download = (url) ->
+			kit.request {
+				url: url
+				agent: conf.agent
+			}
+			.then (body) ->
+				list = JSON.parse(body)
 
-		kit.request {
-			url: target_url
-			agent: conf.agent
-		}
-		.then (body) ->
-			list = JSON.parse(body)
+				if list.length == 0
+					work.stop_timer()
+					return
 
-			if list.length == 0
-				work.stop_timer()
-				return
+				# Save post list to disk.
+				Q.all list.map (post) ->
+					path = kit.path.join 'post', post.id + ''
+					kit.exists path
+					.then (exists) ->
+						if exists
+							if conf.mode == 'diff'
+								work.stop_timer()
+						else
+							kit.outputFile path, JSON.stringify(post)
+				.then ->
+					list
+			.then (list) ->
+				return if not list
 
-			# Save post list to disk.
-			Q.all list.map (post) ->
-				path = kit.path.join 'post', post.id + ''
-				kit.exists path
-				.then (exists) ->
-					if exists
-						if conf.mode == 'diff'
-							work.stop_timer()
-					else
-						kit.outputFile path, JSON.stringify(post)
-			.then ->
-				list
-		.then (list) ->
-			return if not list
+				kit.log 'Page: '.cyan + "#{list.length} " + decodeURIComponent(url)
 
-			kit.log 'Page: '.cyan + "#{list.length} " + decodeURIComponent(target_url)
+				db.exec {
+					num: Get_page.page_num
+					list: list.map((el) -> el.id)
+				}, (jdb, data) ->
+					jdb.doc.page_num = data.num
+					jdb.doc.post_list = jdb.doc.post_list.concat data.list
+					jdb.save()
+			.catch (err) ->
+				kit.log err
+				db.exec {
+					url: url
+					err: err.stack
+				}, (jdb, data) ->
+					jdb.doc.err_pages[data.url] = data.err
+					jdb.save()
+			.fin ->
+				work.done self
 
-			db.exec {
-				num: Get_page.page_num
-				list: list.map((el) -> el.id)
-			}, (jdb, data) ->
-				jdb.doc.page_num = data.num
-				jdb.doc.post_list = jdb.doc.post_list.concat data.list
-				jdb.save()
-		.catch (err) ->
-			kit.log err
-			db.exec {
-				url: target_url
-				err: err.stack
-			}, (jdb, data) ->
-				jdb.doc.err_pages[data.url] = data.err
-				jdb.save()
-		.fin ->
-			work.done self
+				if work.is_all_done()
+					Get_page.all_done = true
 
-			if work.is_all_done()
-				Get_page.all_done = true
+	@url_iter: ->
+		db.exec (jdb) ->
+			url = null
+			for k, v of jdb.doc.err_pages
+				url = k
+				delete jdb.doc.err_pages[k]
+			jdb.save url
+		.then (url) ->
+			return url if url
+
+			kit.url.format {
+				protocol: 'https'
+				host: 'yande.re'
+				pathname: 'post.json'
+				query:
+					tags: conf.tags
+					page: ++Get_page.page_num
+					limit: 50
+			}
 
 class Download_url
 
@@ -106,7 +117,6 @@ class Download_url
 				if Get_page.all_done and work.count == 0
 					work.stop_timer()
 					kit.log "All done.".green
-					exit()
 				return
 
 			kit.log 'Download: '.cyan + id
@@ -291,8 +301,9 @@ init_web = ->
 
 	service.use renderer.static('client')
 
-	service.listen 8019, ->
-		kit.open 'http://127.0.0.1:8019'
+	service.listen conf.port, ->
+		if conf.auto_open_page
+			kit.open 'http://127.0.0.1:' + conf.port
 
 init_err_handlers = ->
 	process.on 'SIGINT', exit
