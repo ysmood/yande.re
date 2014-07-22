@@ -5,6 +5,8 @@ page_num = location.pathname.match(/\d+$/) or 0
 
 $(window).scrollTop 0
 
+page_indicators = []
+
 is_loading = false
 load_images = ->
 	return if is_loading
@@ -18,15 +20,15 @@ load_images = ->
 			is_loading = false
 			return
 
-		$img_list_view.append $("<h3 class='page_num'>Page: #{page_num}</h3>")
+		page_indicator = $("<h3 class='page_num' num='#{page_num}'>Page: #{page_num}</h3>")
+		page_indicators.push page_indicator
+		$img_list_view.append page_indicator
 		for id, i in page
 			$img = $("
 				<img title='#{id}' src='/image/#{id}'>
 			")
 			$img_list_view.append $img
 			$img.on 'error', -> $img.remove()
-
-		history.pushState '', 'page ' + page_num, '/viewer/' + page_num + location.search
 
 		page_num++
 
@@ -38,11 +40,20 @@ load_images()
 
 $window = $(window)
 $document = $(document)
+num = 0
 $window.scroll ->
 	scroll_h = $window.scrollTop() + $window.height()
 	doc_height = $document.height()
-	if doc_height - scroll_h < 200
+	if doc_height - scroll_h < $window.height() * 0.2
 		load_images()
+
+	for indicator in page_indicators
+		if -$window.height() * 0.5 < $window.scrollTop() - indicator.offset().top < $window.height() * 0.5
+			break if num == indicator.attr 'num'
+			num = indicator.attr 'num'
+			history.replaceState num, 'page ' + num, '/viewer/' + num + location.search
+			break
+
 
 $img_list_view.on 'click', (e) ->
 	$this = $(e.target)
