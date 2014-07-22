@@ -60,9 +60,14 @@ class Get_page
 								work.stop_timer()
 								nothing_new = true
 						else
-							kit.outputFile path, JSON.stringify(post)
+							str = JSON.stringify(post)
+							kit.appendFile 'yande.post.db', str + '\n'
+							.then ->
+								kit.outputFile path, str
 				.then ->
-					return if nothing_new
+					if nothing_new
+						kit.log 'Nothing new.'.cyan
+						return
 					list
 			.then (list) ->
 				return if not list
@@ -332,13 +337,14 @@ init_err_handlers = ->
 		exit 1
 
 launch = ->
-	init_basic()
-	init_err_handlers()
+	db.loaded.done ->
+		init_basic()
+		init_err_handlers()
 
-	monitor Get_page, 1
-	monitor Download_url
-	auto_update_duration()
+		monitor Get_page, 1
+		monitor Download_url
+		auto_update_duration()
 
-	init_web()
+		init_web()
 
 launch()
