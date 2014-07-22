@@ -1,7 +1,7 @@
 
 $img_list_view = $('.img_list_view')
 
-page = location.pathname.match(/\d+$/) or 0
+page_num = location.pathname.match(/\d+$/) or 0
 
 $(window).scrollTop 0
 
@@ -12,22 +12,23 @@ load_images = ->
 	console.log '>> load images'
 
 	is_loading = true
-	$.get '/page/' + page + location.search
-	.done ({ page: ids, count }) ->
-		if ids.length == 0
+	$.get '/page/' + page_num + location.search
+	.done ({ page, count }) ->
+		if page.length == 0
 			is_loading = false
 			return
 
-		for id, i in ids
+		$img_list_view.append $("<h3 class='page_num'>Page: #{page_num}</h3>")
+		for id, i in page
 			$img = $("
 				<img title='#{id}' src='/image/#{id}'>
 			")
 			$img_list_view.append $img
 			$img.on 'error', -> $img.remove()
 
-		history.pushState '', 'page ' + page, '/viewer/' + page + location.search
+		history.pushState '', 'page ' + page_num, '/viewer/' + page_num + location.search
 
-		page++
+		page_num++
 
 		setTimeout ->
 			is_loading = false
