@@ -8,6 +8,7 @@ Q = require 'q'
 _ = require 'lodash'
 conf = require './conf'
 task_list = []
+post_db = []
 
 nobone = require 'nobone'
 { kit, db, proxy, service, renderer } = nobone {
@@ -60,10 +61,17 @@ class Get_page
 								work.stop_timer()
 								nothing_new = true
 						else
-							str = JSON.stringify(post)
-							kit.appendFile 'yande.post.db', str + '\n'
+							kit.appendFile 'yande.post.db', JSON.stringify(post) + '\n'
 							.then ->
-								kit.outputFile path, str
+								kit.outputFile path, JSON.stringify({
+									id: post.id
+									tags: post.tags.split ' '
+									score: post.score
+									author: post.author
+									created_at: post.created_at
+									width: post.width
+									height: post.height
+								}) + '\n'
 				.then ->
 					if nothing_new
 						kit.log 'Nothing new.'.cyan
@@ -312,22 +320,47 @@ init_web = ->
 	service.get '/viewer', viewer
 	service.get '/viewer/*', viewer
 
-	ids = null
 	service.get '/page/:num', (req, res) ->
-		Q.fcall ->
-			if not ids
-				kit.readdir('post').then (rets) ->
-					ids = rets.sort (a, b) -> b - a
-		.done ->
-			num = +req.params.num * 100
-			page = ids[num ... num + 100]
-			res.send page
+		if not req.query.s
+			qs = ''
+		else
+			qs = req.query.s.split ','
+
+		ids = []
+		_.each post_db, (el) ->
+			for tag in qs
+				if el.tags.indexOf(tag) == -1
+					return
+			ids.push el.id
+
+		num = +req.params.num * 100
+		page = ids[num ... num + 100]
+		res.send {
+			page
+			count: ids.length
+		}
 
 	service.use renderer.static('client')
 
+	kit.log 'Listen port ' + conf.port
 	service.listen conf.port, ->
 		if conf.auto_open_page
 			kit.open 'http://127.0.0.1:' + conf.port
+
+init_post_db = ->
+	readline = require 'readline'
+	db_file = kit.fs.createReadStream 'yande.post.db', 'utf8'
+
+	rl = readline.createInterface {
+		input: db_file
+		output: process.stdout
+		terminal: false
+	}
+
+	line_count = 0
+	rl.on 'line', (line) ->
+		post = JSON.parse line
+		post_db.push post
 
 init_err_handlers = ->
 	process.on 'SIGINT', exit
@@ -346,5 +379,6 @@ launch = ->
 		auto_update_duration()
 
 		init_web()
+		init_post_db()
 
 launch()

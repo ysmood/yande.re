@@ -12,8 +12,12 @@ load_images = ->
 	console.log '>> load images'
 
 	is_loading = true
-	$.get '/page/' + page
-	.done (ids) ->
+	$.get '/page/' + page + location.search
+	.done ({ page: ids, count }) ->
+		if ids.length == 0
+			is_loading = false
+			return
+
 		for id, i in ids
 			$img = $("
 				<img title='#{id}' src='/image/#{id}'>
@@ -21,7 +25,7 @@ load_images = ->
 			$img_list_view.append $img
 			$img.on 'error', -> $img.remove()
 
-		history.pushState '', 'page ' + page, '/viewer/' + page
+		history.pushState '', 'page ' + page, '/viewer/' + page + location.search
 
 		page++
 
