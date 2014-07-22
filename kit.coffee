@@ -11,6 +11,7 @@ create_db_file = ->
 
 	kit.readdir 'post'
 	.done (ids) ->
+		ids.sort (a, b) -> b - a
 		list = []
 		len = ids.length
 		kit.async_limit 100, (i) ->
@@ -38,38 +39,4 @@ create_db_file = ->
 			db_file.end()
 			kit.log Date.now() - t
 
-search = ->
-	post_list = []
-	readline = require 'readline'
-	db_file = kit.fs.createReadStream 'post.db', 'utf8'
-
-	rl = readline.createInterface {
-		input: db_file
-		output: process.stdout
-		terminal: false
-	}
-
-	line_count = 0
-	rl.on 'line', (line) ->
-		post = JSON.parse line
-		post_list.push post
-
-	rl.on 'close', ->
-		srv.get '/', (req, res, next) ->
-			if not req.query.s
-				next()
-				return
-
-			qs = req.query.s.split ','
-			rets = _.filter post_list, (el) ->
-				for tag in qs
-					if el.tags.indexOf(tag) == -1
-						return false
-				return true
-
-			res.send rets
-
-		srv.listen 8013
-
 create_db_file()
-# search()
