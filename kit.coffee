@@ -7,7 +7,7 @@ _ = require 'lodash'
 t = Date.now()
 
 create_db_file = ->
-	db_file = kit.fs.createWriteStream 'post.db'
+	db_file = kit.fs.createWriteStream 'yande.post.db'
 
 	kit.readdir 'post'
 	.done (ids) ->
@@ -20,16 +20,21 @@ create_db_file = ->
 			kit.readFile path, 'utf8'
 		, false
 		.progress (ret) ->
-			post = JSON.parse(ret)
-			list.push JSON.stringify {
-				id: post.id
-				tags: post.tags.split ' '
-				score: post.score
-				author: post.author
-				created_at: post.created_at
-				width: post.width
-				height: post.height
-			}
+			try
+				post = JSON.parse(ret)
+				if not _.isArray post.tags
+					post.tags = post.tags.split ' '
+				list.push JSON.stringify {
+					id: post.id
+					tags: post.tags
+					score: post.score
+					author: post.author
+					created_at: post.created_at
+					width: post.width
+					height: post.height
+				}
+			catch err
+				kit.log ret
 
 			if list.length > 100
 				process.stdout.write '.'

@@ -138,8 +138,20 @@ class Download_url
 		.then (id) ->
 			if not id
 				if Get_page.all_done and work.count == 0
-					work.stop_timer()
-					kit.log "All done.".green
+					kit.readdir 'post'
+					.then (post_ids) ->
+						kit.readdir conf.url_key
+						.then (url_ids) ->
+							ids = _.difference post_ids, url_ids
+
+							if ids.length > 0
+								db.exec ids, (jdb, ids) ->
+									jdb.doc.post_list = ids
+									jdb.save()
+							else
+								work.stop_timer()
+								kit.log "All done.".green
+					.done()
 				return
 
 			kit.log 'Download: '.cyan + id
@@ -365,9 +377,9 @@ init_post_db = ->
 init_err_handlers = ->
 	process.on 'SIGINT', exit
 
-	process.on 'uncaughtException', (err) ->
-		kit.log err.stack
-		exit 1
+	# process.on 'uncaughtException', (err) ->
+	# 	kit.log err.stack
+	# 	exit 1
 
 launch = ->
 	db.loaded.done ->
