@@ -400,4 +400,6 @@ launch = ->
 		init_web()
 		init_post_db()
 
+		setInterval init_post_db, 1000 * 60 * 5
+
 launch()
