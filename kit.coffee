@@ -39,8 +39,7 @@ create_db_file = ->
 			kit.log Date.now() - t
 
 search = ->
-	db = []
-	count = 0
+	post_list = []
 	readline = require 'readline'
 	db_file = kit.fs.createReadStream 'post.db', 'utf8'
 
@@ -53,21 +52,16 @@ search = ->
 	line_count = 0
 	rl.on 'line', (line) ->
 		post = JSON.parse line
-		db.push post
-
-		if line_count++ % 100 == 0
-			fs. db.join('\n') + '\n'
+		post_list.push post
 
 	rl.on 'close', ->
-		kit.log Date.now() - t
-
 		srv.get '/', (req, res, next) ->
 			if not req.query.s
 				next()
 				return
 
 			qs = req.query.s.split ','
-			rets = _.filter db, (el) ->
+			rets = _.filter post_list, (el) ->
 				for tag in qs
 					if el.tags.indexOf(tag) == -1
 						return false
