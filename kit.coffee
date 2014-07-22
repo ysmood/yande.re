@@ -17,13 +17,22 @@ create_db_file = ->
 			return if len == i
 			path = 'post/' + ids[i]
 			kit.readFile path, 'utf8'
-			.then (str) ->
-				str + '\n'
 		, false
 		.progress (ret) ->
-			list.push ret
+			post = JSON.parse(ret)
+			list.push JSON.stringify {
+				id: post.id
+				tags: post.tags.split ' '
+				score: post.score
+				author: post.author
+				created_at: post.created_at
+				width: post.width
+				height: post.height
+			}
+
 			if list.length > 100
-				db_file.write list.join('')
+				process.stdout.write '.'
+				db_file.write list.join('\n') + '\n'
 				list = []
 		.done ->
 			db_file.end()
@@ -41,14 +50,13 @@ search = ->
 		terminal: false
 	}
 
+	line_count = 0
 	rl.on 'line', (line) ->
 		post = JSON.parse line
-		post.tags = post.tags.split ' '
-		delete post.frames_pending_string
-		delete post.frames_pending
-		delete post.frames_string
-		delete post.frames
 		db.push post
+
+		if line_count++ % 100 == 0
+			fs. db.join('\n') + '\n'
 
 	rl.on 'close', ->
 		kit.log Date.now() - t
@@ -69,4 +77,5 @@ search = ->
 
 		srv.listen 8013
 
-search()
+create_db_file()
+# search()
