@@ -20,5 +20,5 @@ module.exports = {
 	mode: 'default'
 
 	# Automatically open the monitor page.
-	auto_open_page: true
+	auto_open_page: false
 }

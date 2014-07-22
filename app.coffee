@@ -60,18 +60,18 @@ class Get_page
 							conf.mode == 'diff'
 								work.stop_timer()
 								nothing_new = true
-						else
-							kit.appendFile 'yande.post.db', JSON.stringify(post) + '\n'
-							.then ->
-								kit.outputFile path, JSON.stringify({
-									id: post.id
-									tags: post.tags.split ' '
-									score: post.score
-									author: post.author
-									created_at: post.created_at
-									width: post.width
-									height: post.height
-								}) + '\n'
+
+						kit.appendFile 'yande.post.db', JSON.stringify({
+								id: post.id
+								tags: post.tags.split ' '
+								score: post.score
+								author: post.author
+								created_at: post.created_at
+								width: post.width
+								height: post.height
+							}) + '\n'
+						.then ->
+							kit.outputFile path, JSON.stringify(post) + '\n'
 				.then ->
 					if nothing_new
 						kit.log 'Nothing new.'.cyan
@@ -143,7 +143,6 @@ class Download_url
 						kit.readdir conf.url_key
 						.then (url_ids) ->
 							ids = _.difference post_ids, url_ids
-
 							if ids.length > 0
 								db.exec ids, (jdb, ids) ->
 									jdb.doc.post_list = ids
@@ -153,8 +152,6 @@ class Download_url
 								kit.log "All done.".green
 					.done()
 				return
-
-			kit.log 'Download: '.cyan + id
 
 			self.id = id
 
@@ -169,6 +166,7 @@ class Download_url
 
 			dir = kit.path.join conf.url_key, kit.pad(Math.floor(post.id / 1000), 4)
 			path = kit.path.join dir, post.id + kit.path.extname(post.file_url)
+			f_stream = kit.fs.createWriteStream path
 
 			kit.exists (dir)
 			.then (exists) ->
@@ -177,11 +175,18 @@ class Download_url
 			.then ->
 				kit.request {
 					url: url
-					res_pipe: kit.fs.createWriteStream path
+					res_pipe: f_stream
 					agent: conf.agent
 				}
+			.then ->
+				Download_url.last_download = path
+				db.exec (jdb) ->
+					jdb.doc.download_count++
+					jdb.save()
+				kit.log 'Url done: '.cyan + [post.id, post.tags].join(' ')[...120]
 			.catch (err) ->
-				kit.log err
+				f_stream.end()
+				kit.log "#{post.id} #{err.message}".red
 				db.exec {
 					id: post.id
 					err: err.stack
@@ -189,12 +194,6 @@ class Download_url
 					jdb.doc.err_posts[data.id] = data.err
 					jdb.doc.post_list.push data.id
 					jdb.save()
-			.then ->
-				Download_url.last_download = path
-				db.exec (jdb) ->
-					jdb.doc.download_count++
-					jdb.save()
-				kit.log 'Url done: '.cyan + [post.id, post.tags].join(' ')[...120]
 		.fin ->
 			work.done self
 
@@ -274,11 +273,13 @@ exit = (code = 0) ->
 			continue if not id
 			jdb.doc.post_list.unshift id
 		jdb.save()
-	.done ->
+	.then ->
 		kit.log "#{ids.length} tasks reverted."
 		kit.log 'Compact DB...'
-		db.compact_db_file_sync()
-
+		db.compact_db_file()
+	.catch (err) ->
+		kit.log err
+	.done ->
 		process.exit code
 
 init_web = ->
@@ -360,6 +361,9 @@ init_web = ->
 			kit.open 'http://127.0.0.1:' + conf.port
 
 init_post_db = ->
+	if not kit.fs.existsSync 'yande.post.db'
+		return
+
 	readline = require 'readline'
 	db_file = kit.fs.createReadStream 'yande.post.db', 'utf8'
 
@@ -374,12 +378,15 @@ init_post_db = ->
 		post = JSON.parse line
 		post_db.push post
 
+	rl.on 'close', ->
+		post_db.sort (a, b) -> b.id - a.id
+
 init_err_handlers = ->
 	process.on 'SIGINT', exit
 
-	# process.on 'uncaughtException', (err) ->
-	# 	kit.log err.stack
-	# 	exit 1
+	process.on 'uncaughtException', (err) ->
+		kit.log err.stack
+		exit 1
 
 launch = ->
 	db.loaded.done ->

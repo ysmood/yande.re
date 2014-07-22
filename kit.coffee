@@ -11,7 +11,6 @@ create_db_file = ->
 
 	kit.readdir 'post'
 	.done (ids) ->
-		ids.sort (a, b) -> b - a
 		list = []
 		len = ids.length
 		kit.async_limit 100, (i) ->
