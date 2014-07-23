@@ -18,8 +18,8 @@ module.exports = {
 	# `diff` mode will try to download the newly added posts.
 	# `err` mode will try to download all the errored url.
 	# `view` mode will try to download all the errored url.
-	mode: 'view'
+	mode: 'default'
 
 	# Automatically open the monitor page.
-	auto_open_page: false
+	auto_open_page: true
 }

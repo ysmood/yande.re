@@ -80,3 +80,9 @@ $img_list_view.on 'click', (e) ->
 	else if $('#post-info').is ':visible'
 		$('#post-info').fadeOut()
 
+.on 'dblclick', (e) ->
+	id = $(e.target).attr 'title'
+	window.open "https://yande.re/post/show/#{id}"
+	setTimeout ->
+		$('#post-info').hide()
+	, 500
