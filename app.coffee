@@ -183,7 +183,7 @@ class Download_url
 				db.exec (jdb) ->
 					jdb.doc.download_count++
 					jdb.save()
-				kit.log 'Url done: '.cyan + [post.id, post.tags].join(' ')[...120]
+				# kit.log 'Url done: '.cyan + [post.id, post.tags].join(' ')[...120]
 			.catch (err) ->
 				f_stream.end()
 				kit.log "#{post.id} #{err.message}".red
@@ -288,7 +288,6 @@ init_web = ->
 		.done (tpl) ->
 			res.send tpl({
 				conf
-				nobone: nobone.client()
 			})
 
 	service.get '/stats', (req, res) ->
@@ -326,24 +325,30 @@ init_web = ->
 	viewer = (req, res) ->
 		renderer.render 'viewer.ejs'
 		.done (tpl) ->
-			res.send tpl({
-				nobone: nobone.client()
-			})
+			res.send tpl()
 
 	service.get '/viewer', viewer
 	service.get '/viewer/*', viewer
 
 	service.get '/page/:num', (req, res) ->
-		if not req.query.s
-			qs = ''
+		if not req.query.tags
+			tags = null
 		else
-			qs = req.query.s.split ','
+			tags = req.query.tags.split ','
+
+		if not req.query.score
+			score = 0
+		else
+			score = +req.query.score
 
 		ids = []
 		_.each post_db, (el) ->
-			for tag in qs
-				if el.tags.indexOf(tag) == -1
-					return
+			if el.score < score
+				return
+			if _.isArray tags
+				for tag in tags
+					if el.tags.indexOf(tag) == -1
+						return
 			ids.push el.id
 
 		num = +req.params.num * 100
@@ -386,6 +391,7 @@ init_post_db = ->
 	rl.on 'close', ->
 		post_db.sort (a, b) -> b.id - a.id
 		_.uniq post_db, true, 'id'
+		kit.log 'Post db loaded: '.cyan + post_db.length
 
 init_err_handlers = ->
 	process.on 'SIGINT', exit
