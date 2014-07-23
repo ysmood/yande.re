@@ -377,11 +377,15 @@ init_post_db = ->
 
 	line_count = 0
 	rl.on 'line', (line) ->
-		post = JSON.parse line
-		post_db.push post
+		try
+			post = JSON.parse line
+			post_db.push post
+		catch err
+			kit.log err
 
 	rl.on 'close', ->
 		post_db.sort (a, b) -> b.id - a.id
+		_.uniq post_db, true, 'id'
 
 init_err_handlers = ->
 	process.on 'SIGINT', exit
