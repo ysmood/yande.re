@@ -4,7 +4,7 @@
 		{
 			"folder_exclude_patterns":
 			[
-				"preview",
+				"preview_url",
 				"post",
 				"*.bak"
 			],

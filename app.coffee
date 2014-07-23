@@ -167,13 +167,14 @@ class Download_url
 
 			dir = kit.path.join conf.url_key, kit.pad(Math.floor(post.id / 1000), 4)
 			path = kit.path.join dir, post.id + kit.path.extname(post.file_url)
-			f_stream = kit.fs.createWriteStream path
+			f_stream = null
 
 			kit.exists (dir)
 			.then (exists) ->
 				if not exists
 					kit.mkdirs dir
 			.then ->
+				f_stream = kit.fs.createWriteStream path
 				kit.request {
 					url: url
 					res_pipe: f_stream
