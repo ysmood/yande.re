@@ -1,0 +1,15 @@
+{
+	"folders":
+	[
+		{
+			"folder_exclude_patterns":
+			[
+				"preview_url",
+				"post",
+				"*.bak"
+			],
+			"follow_symlinks": true,
+			"path": "."
+		}
+	]
+}
