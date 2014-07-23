@@ -13,7 +13,7 @@ create_db_file = ->
 	.done (ids) ->
 		list = []
 		len = ids.length
-		kit.async_limit 100, (i) ->
+		kit.async 100, (i) ->
 			return if len == i
 			path = 'post/' + ids[i]
 			kit.readFile path, 'utf8'
