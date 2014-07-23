@@ -43,6 +43,7 @@ set_state = ->
 		$('.duration')[0].textContent = format_time data.duration
 		$('.page')[0].textContent = data.page_num
 		$('.err')[0].textContent = data.err_count
+		$('.mem_usage')[0].textContent = (data.mem_usage.rss / 1024 / 1024).toFixed(2) + ' MB'
 		$('.last_download')[0].textContent = data.err_count
 
 	$('.last_download')[0].src = '/last_download?_=' + Date.now()

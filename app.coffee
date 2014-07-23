@@ -302,6 +302,7 @@ init_web = ->
 				download_count: jdb.doc.download_count
 				duration: jdb.doc.duration
 				err_count: _.keys(jdb.doc.err_pages).length + _.keys(jdb.doc.err_posts).length
+				mem_usage: process.memoryUsage()
 			}
 		.then (data) ->
 			res.send data
