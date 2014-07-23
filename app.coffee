@@ -367,6 +367,8 @@ init_post_db = ->
 	readline = require 'readline'
 	db_file = kit.fs.createReadStream 'yande.post.db', 'utf8'
 
+	post_db = []
+
 	rl = readline.createInterface {
 		input: db_file
 		output: process.stdout
