@@ -294,7 +294,7 @@ init_web = ->
 	service.get '/stats', (req, res) ->
 		db.exec (jdb) ->
 			jdb.send {
-				left: jdb.doc.post_list[0]
+				left: +jdb.doc.post_list[0]
 				tasks: jdb.doc.post_list.length
 				working_tasks: task_list.length
 				page_num: jdb.doc.page_num
