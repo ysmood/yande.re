@@ -60,18 +60,19 @@ class Get_page
 							conf.mode == 'diff'
 								work.stop_timer()
 								nothing_new = true
-
-						kit.appendFile 'yande.post.db', JSON.stringify({
-								id: post.id
-								tags: post.tags.split ' '
-								score: post.score
-								author: post.author
-								created_at: post.created_at
-								width: post.width
-								height: post.height
-							}) + '\n'
-						.then ->
-							kit.outputFile path, JSON.stringify(post) + '\n'
+						else
+							kit.appendFile 'yande.post.db', JSON.stringify({
+									id: post.id
+									tags: post.tags.split ' '
+									score: post.score
+									rating: post.rating
+									author: post.author
+									created_at: post.created_at
+									width: post.width
+									height: post.height
+								}) + '\n'
+							.then ->
+								kit.outputFile path, JSON.stringify(post) + '\n'
 				.then ->
 					if nothing_new
 						kit.log 'Nothing new.'.cyan
@@ -331,19 +332,26 @@ init_web = ->
 	service.get '/viewer/*', viewer
 
 	service.get '/page/:num', (req, res) ->
-		if not req.query.tags
-			tags = null
-		else
+		if req.query.tags
 			tags = req.query.tags.split ','
-
-		if not req.query.score
-			score = 0
 		else
+			tags = null
+
+		if req.query.score
 			score = +req.query.score
+		else
+			score = 0
+
+		if req.query.ratings
+			ratings = req.query.ratings.split ''
+		else
+			ratings = ['s', 'q', 'e']
 
 		ids = []
 		_.each post_db, (el) ->
 			if el.score < score
+				return
+			if ratings.indexOf(el.rating) == -1
 				return
 			if _.isArray tags
 				for tag in tags
@@ -391,7 +399,7 @@ init_post_db = ->
 	rl.on 'close', ->
 		post_db.sort (a, b) -> b.id - a.id
 		_.uniq post_db, true, 'id'
-		kit.log 'Post db loaded: '.cyan + post_db.length
+		kit.log 'Post db loaded: '.yellow + post_db.length
 
 init_err_handlers = ->
 	process.on 'SIGINT', exit
@@ -405,9 +413,10 @@ launch = ->
 		init_basic()
 		init_err_handlers()
 
-		monitor Get_page, 1
-		monitor Download_url
-		auto_update_duration()
+		if conf.mode != 'view'
+			monitor Get_page, 1
+			monitor Download_url
+			auto_update_duration()
 
 		init_web()
 		init_post_db()

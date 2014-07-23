@@ -26,6 +26,7 @@ create_db_file = ->
 				list.push JSON.stringify {
 					id: post.id
 					tags: post.tags
+					rating: post.rating
 					score: post.score
 					author: post.author
 					created_at: post.created_at
