@@ -24,7 +24,7 @@
   "dependencies": {
     "coffee-script": "^1.7.1",
     "lodash": "^2.4.1",
-    "nobone": "^0.3.0",
+    "nobone": "*",
     "q": "^1.0.1"
   }
 }
