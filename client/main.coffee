@@ -53,3 +53,10 @@ auto_update = ->
 	setInterval set_state, 1000
 
 auto_update()
+
+$('.reload_post_db')[0].addEventListener 'click', ->
+	self = @
+	self.disabled = true
+	get '/reload_post_db', ->
+		self.disabled = false
+		alert 'Post Database Reloaded.'

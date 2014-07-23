@@ -307,6 +307,10 @@ init_web = ->
 		.then (data) ->
 			res.send data
 
+	service.get '/reload_post_db', (req, res) ->
+		reload_post_db().done ->
+			res.send 200
+
 	service.get '/last_download', (req, res) ->
 		if Download_url.last_download
 			res.sendfile Download_url.last_download
@@ -375,9 +379,11 @@ init_web = ->
 		if conf.auto_open_page
 			kit.open 'http://127.0.0.1:' + conf.port
 
-init_post_db = ->
+reload_post_db = ->
 	if not kit.fs.existsSync 'yande.post.db'
 		return
+
+	defer = Q.defer()
 
 	readline = require 'readline'
 	db_file = kit.fs.createReadStream 'yande.post.db', 'utf8'
@@ -402,6 +408,9 @@ init_post_db = ->
 		post_db.sort (a, b) -> b.id - a.id
 		_.uniq post_db, true, 'id'
 		kit.log 'Post db loaded: '.yellow + post_db.length
+		defer.resolve()
+
+	defer.promise
 
 init_err_handlers = ->
 	process.on 'SIGINT', exit
@@ -421,8 +430,13 @@ launch = ->
 			auto_update_duration()
 
 		init_web()
-		init_post_db()
+		reload_post_db()
 
-		setInterval init_post_db, 1000 * 60 * 5
+		tmr = setInterval ->
+			if Get_page.all_done
+				clearInterval tmr
+				return
+			reload_post_db()
+		, 1000 * 60 * 20
 
 launch()
