@@ -336,6 +336,28 @@ init_web = ->
 			path = kit.path.join dir, post.id + kit.path.extname(post.file_url)
 			res.sendfile path
 
+	service.sse '/download', (req, res) ->
+		url = req.query.url
+		path = './' + req.query.path
+
+		kit.mkdirs kit.path.dirname(path)
+		.then ->
+			len = 0
+			count = 0
+			f_stream = kit.fs.createWriteStream path
+			p = kit.request {
+				url: url
+				res_pipe: f_stream
+				agent: conf.agent
+			}
+			p.req.on 'response', (r) ->
+				len = r.headers['content-length']
+			p.req.on 'data', (buf) ->
+				count += buf.length
+
+			p
+		.done ->
+
 	viewer = (req, res) ->
 		renderer.render 'viewer.ejs'
 		.done (tpl) ->
