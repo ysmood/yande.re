@@ -156,6 +156,7 @@ class Download_url
 									jdb.save()
 							else
 								work.stop_timer()
+								clearInterval auto_update_duration.tmr
 								kit.log "All done.".green
 					.done()
 				return
@@ -264,7 +265,7 @@ monitor = (task, max_tasks = 10) ->
 auto_update_duration = ->
 	# Calc the download duration.
 	last_time = Date.now()
-	setInterval ->
+	auto_update_duration.tmr = setInterval ->
 		now = Date.now()
 		span = now - last_time
 		db.exec span, (jdb, span) ->
