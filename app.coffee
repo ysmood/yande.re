@@ -274,11 +274,12 @@ auto_update_duration = ->
 	, 500
 
 exit = (code = 0) ->
-	ids = task_list.map (el) -> el.id
+	ids = []
+	task_list.forEach (el) ->
+		ids.push(el.id) if _.has el, 'id'
 
 	db.exec ids, (jdb, ids) ->
 		for id in ids
-			continue if not id
 			jdb.doc.post_list.unshift id
 		jdb.save()
 	.then ->
