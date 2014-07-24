@@ -5,7 +5,8 @@
   "main": "app.coffee",
   "scripts": {
     "test": "cake test",
-    "start": "coffee app.coffee"
+    "start": "coffee app.coffee",
+    "install": "cake setup"
   },
   "repository": {
     "type": "git",
