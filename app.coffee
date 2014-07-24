@@ -141,11 +141,17 @@ class Download_url
 				if Get_page.all_done and work.count == 0
 					kit.readdir 'post'
 					.then (post_ids) ->
-						kit.readdir conf.url_key
-						.then (url_ids) ->
-							ids = _.difference post_ids, url_ids
+						kit.glob conf.url_key + '/*/*'
+						.then (url_paths) ->
+							for path, i in url_paths
+								url_paths[i] = kit.path.basename(
+									path
+									kit.path.extname path
+								)
+
+							ids = _.difference post_ids, url_paths
 							if ids.length > 0
-								db.exec ids, (jdb, ids) ->
+								db.exec ids.map((el) -> +el), (jdb, ids) ->
 									jdb.doc.post_list = ids
 									jdb.save()
 							else
