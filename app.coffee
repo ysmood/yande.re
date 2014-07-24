@@ -6,7 +6,8 @@
 
 Q = require 'q'
 _ = require 'lodash'
-conf = require './conf'
+default_conf = require './conf.default'
+conf = _.defaults require('./conf'), default_conf
 task_list = []
 post_db = []
 
@@ -378,8 +379,8 @@ init_web = ->
 						return
 			ids.push el.id
 
-		num = +req.params.num * 100
-		page = ids[num ... num + 100]
+		num = +req.params.num * 50
+		page = ids[num ... num + 50]
 		res.send {
 			page
 			count: ids.length
