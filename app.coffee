@@ -320,7 +320,7 @@ init_web = ->
 			path = kit.path.join dir, post.id + kit.path.extname(post.file_url)
 			res.sendfile path
 
-	service.sse '/download', (req, res) ->
+	service.get '/download', (req, res) ->
 		url = req.query.url
 		path = './' + req.query.path
 
@@ -433,6 +433,24 @@ init_err_handlers = ->
 		exit 1
 
 launch = ->
+	# kit.readdir 'post'
+	# .then (post_ids) ->
+	# 	kit.glob conf.url_key + '/*/*'
+	# 	.then (url_paths) ->
+	# 		for path, i in url_paths
+	# 			url_paths[i] = kit.path.basename(
+	# 				path
+	# 				kit.path.extname path
+	# 			)
+
+	# 		ids = _.difference post_ids, url_paths
+	# 		kit.log 'Diff: '.cyan + ids.length
+	# 		if ids.length > 0
+	# 			db.exec ids.map((el) -> +el), (jdb, ids) ->
+	# 				jdb.doc.post_list = ids
+	# 				jdb.save()
+	# .done()
+
 	db.loaded.done ->
 		init_basic()
 		init_err_handlers()
