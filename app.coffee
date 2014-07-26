@@ -174,7 +174,7 @@ class Download_url
 					agent: conf.agent
 				}
 			.then ->
-				Download_url.last_download = path
+				Download_url.last_download = post.id
 				db.exec (jdb) ->
 					jdb.doc.download_count++
 					jdb.save()
@@ -223,7 +223,7 @@ init_basic = ->
 		Get_page.page_num = 0
 
 # Monitor design mode.
-monitor = (task, max_tasks = 10) ->
+monitor = (task, max_tasks = 10, span = 10) ->
 	count = 0
 	is_all_done = false
 
@@ -241,12 +241,15 @@ monitor = (task, max_tasks = 10) ->
 			is_all_done and count == 0
 	}
 
-	timer = setInterval ->
+	run = ->
 		if count > max_tasks
 			return
 		work.count = count
 		task_list.push(new task(work))
-	, 10
+
+	run()
+
+	timer = setInterval run, span
 
 auto_update_duration = ->
 	# Calc the download duration.
@@ -297,6 +300,7 @@ init_web = ->
 				duration: jdb.doc.duration
 				err_count: _.keys(jdb.doc.err_pages).length + _.keys(jdb.doc.err_posts).length
 				mem_usage: process.memoryUsage()
+				last_download: Download_url.last_download
 			}
 		.then (data) ->
 			res.send data
@@ -304,12 +308,6 @@ init_web = ->
 	service.get '/reload_post_db', (req, res) ->
 		reload_post_db().done ->
 			res.status(200).end()
-
-	service.get '/last_download', (req, res) ->
-		if Download_url.last_download
-			res.sendfile Download_url.last_download
-		else
-			res.status(404).end()
 
 	service.get '/post/:id', (req, res) ->
 		res.sendfile 'post/' + req.params.id
@@ -459,7 +457,7 @@ launch = ->
 		init_err_handlers()
 
 		if conf.mode != 'view'
-			monitor Get_page, 1
+			monitor Get_page, 1, 1000 * 30
 			monitor Download_url
 			auto_update_duration()
 

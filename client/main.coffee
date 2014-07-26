@@ -45,8 +45,7 @@ set_state = ->
 		$('.err')[0].textContent = data.err_count
 		$('.mem_usage')[0].textContent = (data.mem_usage.rss / 1024 / 1024).toFixed(2) + ' MB'
 		$('.last_download')[0].textContent = data.err_count
-
-	$('.last_download')[0].src = '/last_download?_=' + Date.now()
+		$('.last_download')[0].src = '/image/' + data.last_download
 
 auto_update = ->
 	set_state()
