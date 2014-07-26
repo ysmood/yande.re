@@ -1,3 +1,4 @@
+
 body
 	color #555
 	font-family arial
@@ -12,7 +13,7 @@ body
 .img_list_view
 	.col
 		float left
-		img
+		.img
 			$margin = 2%
 			margin $margin
 			width 100% - $margin * 2
@@ -22,7 +23,7 @@ body
 			cursor pointer
 			&:hover
 				box-shadow 0 0 10px #777
-		img.show
+		.img.show
 			width auto
 
 .page_num
@@ -44,7 +45,7 @@ body
 	box-sizing border-box
 	overflow auto
 	background rgba(0, 0, 0, 0.8)
-	img
+	.img
 		margin auto
 		display block
 		box-sizing border-box
@@ -78,3 +79,19 @@ body
 				&:nth-child(2)
 					word-break break-all
 					color #fff
+
+#tools
+	display none
+	position absolute
+	left 0
+	top 0
+	padding 3px
+
+	a
+		color #973986
+		font-size 13px
+		text-decoration none
+		border 1px dashed #999
+		padding 2px 8px
+		border-radius 30px
+		background rgba(255, 255, 255, 0.5)

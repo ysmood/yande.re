@@ -1,5 +1,8 @@
 
 $img_list_view = $('.img_list_view')
+$img_show = $ '#img-show'
+$post_info = $ '#post-info'
+$tools = $ '#tools'
 
 page_num = location.pathname.match(/\d+$/) or 0
 
@@ -21,7 +24,7 @@ get_param = (name) ->
 load_img = ($cols, id) ->
 	defer = Q.defer()
 	$img = $("
-		<img title='#{id}' src='/image/#{id}'>
+		<img class='img' title='#{id}' src='/image/#{id}'>
 	")
 
 	$col = _.min $cols, ($col) ->
@@ -48,7 +51,7 @@ load_images = ->
 			is_loading = false
 			return
 
-		page_indicator = $("<h3 class='page_num' num='#{page_num}'>Page: #{page_num}</h3>")
+		page_indicator = $("<h3 class='page_num' num='#{page_num}'><a href='/'>&lt;&lt;</a> Page: #{page_num}</h3>")
 		page_indicators.push page_indicator
 		$img_list_view.append page_indicator
 
@@ -100,13 +103,11 @@ $window.scroll ->
 			break
 
 
-$img_list_view.on 'click', 'img', (e) ->
+$img_list_view
+.on 'click', '.img', (e) ->
 	$this = $(this)
 
-	$.get('/post/' + $this.attr('title')).done (post) ->
-		if typeof post == 'string'
-			post = JSON.parse post
-
+	$.getJSON('/post/' + $this.attr('title')).done (post) ->
 		tr = ''
 		for k, v of post
 			if k == 'id'
@@ -118,18 +119,27 @@ $img_list_view.on 'click', 'img', (e) ->
 				</tr>
 			"
 
-		$('#post-info')
+		$post_info
 		.fadeIn('fast')
 		.find('table').empty().append $(tr)
 
-	$('#img-show')
+	$img_show
 	.fadeIn 'fast'
 	.prepend $this.clone().width($this[0].naturalWidth)
+.on 'mouseenter', '.img', ->
+	$this = $(this)
+	id = $this.attr 'title'
+	pos = $this.offset()
+	$tools.show().offset pos
+	$tools.data 'id', id
 
-$('#img-show').on 'click', (e) ->
-	if not $.contains $('#post-info')[0], e.target
-		$('#img-show')
+	$tools.find('.open').attr 'href', "https://yande.re/post/show/" + id
+	$tools.find('.download').attr 'href', '/download/' + id
+
+$img_show.on 'click', (e) ->
+	if not $.contains $post_info[0], e.target
+		$img_show
 		.fadeOut 'fast', ->
-			$('#img-show')
-			.find('img').remove()
+			$img_show
+			.find('.img').remove()
 		.scrollTop 0
