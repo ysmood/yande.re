@@ -37,6 +37,7 @@ class Get_page
 				kit.request {
 					url
 					agent: conf.agent
+					redirect: 3
 				}
 			.then (body) ->
 				if not body
@@ -169,6 +170,7 @@ class Download_url
 				kit.request {
 					url: url
 					res_pipe: f_stream
+					redirect: 3
 					agent: conf.agent
 				}
 			.then ->
