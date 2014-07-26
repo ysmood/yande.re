@@ -303,13 +303,13 @@ init_web = ->
 
 	service.get '/reload_post_db', (req, res) ->
 		reload_post_db().done ->
-			res.send 200
+			res.status(200).end()
 
 	service.get '/last_download', (req, res) ->
 		if Download_url.last_download
 			res.sendfile Download_url.last_download
 		else
-			res.send 404
+			res.status(404).end()
 
 	service.get '/post/:id', (req, res) ->
 		res.sendfile 'post/' + req.params.id
