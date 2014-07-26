@@ -130,6 +130,7 @@ $img_list_view
 	$this = $(this)
 	id = $this.attr 'title'
 	pos = $this.offset()
+	pos.top -= '24'
 	$tools.show().offset pos
 	$tools.data 'id', id
 
