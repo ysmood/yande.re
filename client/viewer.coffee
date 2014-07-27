@@ -20,10 +20,11 @@ parse_query = (qs_str) ->
 	qs
 
 format_query = (qs) ->
-	str = '?'
+	s = []
 	for k, v of qs
-		str += "#{k}=#{v}&"
-	str
+		continue if _.isEmpty v
+		s.push [k, v].join('=')
+	'?' + s.join('&')
 
 get_query = (name) ->
 	qs = parse_query location.search
@@ -43,9 +44,9 @@ init_dashbaord = ->
 	$col = $('#dashboard .col')
 
 	$tags.val get_query('tags')
-	$ratings.val get_query('ratings') or 'sqe'
-	$score.val get_query('score') or 0
-	$page.val get_query('page') or 0
+	$ratings.val get_query('ratings')
+	$score.val get_query('score')
+	$page.val get_query('page')
 	$col.val get_query('col') or 4
 
 load_img = ($cols, id) ->
@@ -172,3 +173,6 @@ $img_show.on 'click', (e) ->
 			$img_show
 			.find('.img').remove()
 		.scrollTop 0
+
+
+set_query('', '')
