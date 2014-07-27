@@ -4,22 +4,49 @@ $img_show = $ '#img-show'
 $post_info = $ '#post-info'
 $tools = $ '#tools'
 
-page_num = location.pathname.match(/\d+$/) or 0
-
 $(window).scrollTop 0
 
 page_indicators = []
 
 is_loading = false
 
-get_param = (name) ->
-	name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]")
-	regex = new RegExp("[\\?&]" + name + "=([^&#]*)")
-	results = regex.exec(location.search)
-	if results == null
-		null
-	else
-		decodeURIComponent(results[1].replace(/\+/g, " "))
+parse_query = (qs_str) ->
+	qs_str = qs_str.match(/^\??(.*)/)[1]
+	qs = {}
+	for q in qs_str.split '&'
+		s = q.split '='
+		continue if _.isEmpty s
+		qs[s[0]] = s[1] or ''
+	qs
+
+format_query = (qs) ->
+	str = '?'
+	for k, v of qs
+		str += "#{k}=#{v}&"
+	str
+
+get_query = (name) ->
+	qs = parse_query location.search
+	qs[name]
+
+set_query = (name, value) ->
+	qs = parse_query location.search
+	qs[name] = value
+	str = format_query qs
+	history.replaceState name, value, location.pathname + str
+
+init_dashbaord = ->
+	$tags = $('#dashboard .tags')
+	$ratings = $('#dashboard .ratings')
+	$score = $('#dashboard .score')
+	$page = $('#dashboard .page')
+	$col = $('#dashboard .col')
+
+	$tags.val get_query('tags')
+	$ratings.val get_query('ratings') or 'sqe'
+	$score.val get_query('score') or 0
+	$page.val get_query('page') or 0
+	$col.val get_query('col') or 4
 
 load_img = ($cols, id) ->
 	defer = Q.defer()
@@ -39,6 +66,7 @@ load_img = ($cols, id) ->
 
 	defer.promise
 
+page_num = get_query('page') or 0
 load_images = ->
 	return if is_loading
 
@@ -56,7 +84,7 @@ load_images = ->
 		$img_list_view.append page_indicator
 
 		$cols = []
-		col_num = get_param('col') or 4
+		col_num = get_query('col') or 4
 		for i in [0...col_num]
 			$col = $("<div class='col' style='width: #{100 / col_num}%'></div>")
 			$img_list_view.append $col
@@ -84,11 +112,11 @@ load_images = ->
 			is_loading = false
 		, 500
 
+init_dashbaord()
 load_images()
 
 $window = $(window)
 $document = $(document)
-num = 0
 $window.scroll ->
 	scroll_h = $window.scrollTop() + $window.height()
 	doc_height = $document.height()
@@ -99,7 +127,7 @@ $window.scroll ->
 		if -$window.height() * 0.5 < $window.scrollTop() - indicator.offset().top < $window.height() * 0.5
 			break if num == indicator.attr 'num'
 			num = indicator.attr 'num'
-			history.replaceState num, 'page ' + num, '/viewer/' + num + location.search
+			set_query 'page', num
 			break
 
 

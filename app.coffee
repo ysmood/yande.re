@@ -283,7 +283,7 @@ exit = (code = 0) ->
 
 init_web = ->
 	service.get '/', (req, res) ->
-		renderer.render 'index.ejs'
+		renderer.render 'ejs/index.ejs'
 		.done (tpl) ->
 			res.send tpl({
 				conf
@@ -332,12 +332,11 @@ init_web = ->
 			res.redirect post.jpeg_url
 
 	viewer = (req, res) ->
-		renderer.render 'viewer.ejs'
+		renderer.render 'ejs/viewer.ejs'
 		.done (tpl) ->
 			res.send tpl()
 
 	service.get '/viewer', viewer
-	service.get '/viewer/*', viewer
 
 	service.get '/page/:num', (req, res) ->
 		if req.query.tags

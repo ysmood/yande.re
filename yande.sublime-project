@@ -5,6 +5,7 @@
 			"folder_exclude_patterns":
 			[
 				"preview_url",
+				"sample_url",
 				"post",
 				"*.bak"
 			],

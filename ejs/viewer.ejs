@@ -8,15 +8,32 @@
 
 <div id="main">
 	<div class="help">
-		<h4>Help</h4>
-		<ul>
-			<li>Single click to show info box.</li>
-			<li>Double click to open new page.</li>
-			<li>
-				To Change list column number to N, visit link like <code>'/viewer/?col=N'</code>
-			</li>
-		</ul>
+		<form id="dashboard" action="/viewer">
+			<h4>Dashboard</h4>
+			<label>
+				Tags
+				<input class="tags" name="tags" type="text">
+			</label>,
+			<label>
+				Ratings
+				<input class="ratings" name="ratings" type="text">
+			</label>,
+			<label>
+				Score
+				<input class="score" name="score" type="number" min='0' max='1000000'>
+			</label>,
+			<label>
+				Page
+				<input class="page" name="page" type="number" min='0' max='1000000'>
+			</label>,
+			<label>
+				Columns
+				<input class="col" name="col" type="number" min='1' max='30'>
+			</label>
+			<input type="submit" value="search">
+		</form>
 	</div>
+
 	<div class="img_list_view">
 	</div>
 
