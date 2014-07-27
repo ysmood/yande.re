@@ -59,3 +59,10 @@ $('.reload_post_db')[0].addEventListener 'click', ->
 	get '/reload_post_db', ->
 		self.disabled = false
 		alert 'Post Database Reloaded.'
+
+$('.unload_post_db')[0].addEventListener 'click', ->
+	self = @
+	self.disabled = true
+	get '/unload_post_db', ->
+		self.disabled = false
+		alert 'Post Database Unloaded.'

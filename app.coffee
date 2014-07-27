@@ -309,6 +309,10 @@ init_web = ->
 		reload_post_db().done ->
 			res.status(200).end()
 
+	service.get '/unload_post_db', (req, res) ->
+		post_db = []
+		res.status(200).end()
+
 	service.get '/post/:id', (req, res) ->
 		res.sendfile 'post/' + req.params.id
 
@@ -450,12 +454,5 @@ launch = ->
 
 		init_web()
 		reload_post_db()
-
-		tmr = setInterval ->
-			if Get_page.all_done
-				clearInterval tmr
-				return
-			reload_post_db()
-		, 1000 * 60 * 20
 
 launch()
