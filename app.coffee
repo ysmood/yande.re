@@ -91,7 +91,7 @@ class Get_page
 					list: list.map((el) -> el.id)
 				}, (jdb, data) ->
 					jdb.doc.page_num = data.num
-					jdb.doc.post_list = jdb.doc.post_list.concat data.list
+					jdb.doc.post_list = _.union jdb.doc.post_list, data.list
 					delete jdb.doc.err_pages[data.url]
 					jdb.save()
 			.catch (err) ->
