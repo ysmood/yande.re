@@ -319,6 +319,8 @@ init_web = ->
 	service.get '/image/:id', (req, res) ->
 		id = req.params.id
 		kit.readFile 'post/' + id, 'utf8'
+		.catch (err) ->
+			res.status(404).end()
 		.done (str) ->
 			post = JSON.parse str
 			dir = kit.path.join conf.url_key, kit.pad(Math.floor(post.id / 1000), 4)
