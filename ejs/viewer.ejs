@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
+	<link rel="stylesheet" type="text/css" href="/token-input.css">
+	<link rel="stylesheet" type="text/css" href="/token-input-mac.css">
 	<link rel="stylesheet" type="text/css" href="/viewer.css">
 	<title>Viewer</title>
 </head>
@@ -14,21 +16,21 @@
 		</label>
 		<label>
 			Ratings
-			<input class="ratings" name="ratings" type="text">
+			<input class="ratings n" name="ratings" type="text">
 		</label>
 		<label>
 			Score
-			<input class="score" name="score" type="number" min='0' max='1000000'>
+			<input class="score n" name="score" type="number" min='0' max='1000000'>
 		</label>
 		<label>
 			Page
-			<input class="page" name="page" type="number" min='0' max='1000000'>
+			<input class="page n" name="page" type="number" min='0' max='1000000'>
 		</label>
 		<label>
 			Columns
-			<input class="col" name="col" type="number" min='1' max='30'>
+			<input class="col n" name="col" type="number" min='1' max='30'>
 		</label>
-		<input type="submit" value="search">
+		<input type="submit" class="n" value="search">
 	</form>
 
 	<div class="img_list_view">
@@ -49,6 +51,7 @@
 </div>
 
 <script type="text/javascript" src="/jquery.min.js"></script>
+<script type="text/javascript" src="/jquery.tokeninput.js"></script>
 <script type="text/javascript" src="/q.js"></script>
 <script type="text/javascript" src="/lodash.js"></script>
 <script type="text/javascript" src="/viewer.js"></script>

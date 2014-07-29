@@ -37,18 +37,34 @@ set_query = (name, value) ->
 	history.replaceState name, value, location.pathname + str
 
 init_dashbaord = ->
-	$tags = $('#dashboard .tags')
 	$ratings = $('#dashboard .ratings')
 	$score = $('#dashboard .score')
 	$page = $('#dashboard .page')
 	$col = $('#dashboard .col')
 
-	if get_query('tags')
-		$tags.val decodeURIComponent(get_query('tags'))
 	$ratings.val get_query('ratings')
 	$score.val get_query('score')
 	$page.val get_query('page')
 	$col.val get_query('col') or 4
+
+init_tag_input = ->
+	$tags = $('#dashboard .tags')
+	$tags.tokenInput [
+		{id: 7, name: "Ruby"},
+		{id: 11, name: "Python"},
+		{id: 13, name: "JavaScript"},
+		{id: 17, name: "ActionScript"},
+		{id: 19, name: "Scheme"},
+		{id: 23, name: "Lisp"},
+		{id: 29, name: "C#"},
+		{id: 31, name: "Fortran"},
+		{id: 37, name: "Visual Basic"},
+		{id: 41, name: "C"},
+		{id: 43, name: "C++"},
+		{id: 47, name: "Java"}
+	], {
+		theme: 'mac'
+	}
 
 load_img = ($cols, id) ->
 	defer = Q.defer()
@@ -116,6 +132,7 @@ load_images = ->
 
 init_dashbaord()
 load_images()
+init_tag_input()
 
 $window = $(window)
 $document = $(document)
