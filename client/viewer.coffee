@@ -50,7 +50,9 @@ init_dashbaord = ->
 init_tag_input = ->
 	$tags = $('#dashboard .tags')
 
-	tags = decodeURIComponent(get_query 'tags').split(',')
+	tags = []
+	if get_query('tags')
+		tags = decodeURIComponent(get_query 'tags').split(',')
 
 	$tags.tokenInput '/tags', {
 		theme: 'mac'
