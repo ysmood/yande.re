@@ -66,14 +66,14 @@ load_img = ($cols, id) ->
 		<img class='img' title='#{id}' src='/image/#{id}'>
 	")
 
-	$col = _.min $cols, ($col) ->
-		$col.height()
-	$col.append $img
-
 	$img.error ->
 		defer.resolve $img
 		$img.remove()
 	$img.on 'load', ->
+		$col = _.min $cols, ($col) ->
+			$col.height()
+		$col.append $img
+
 		defer.resolve $img
 
 	defer.promise
@@ -104,25 +104,13 @@ load_images = ->
 
 		tasks = page.map (id) -> -> load_img($cols, id)
 
-		load = (tasks) ->
-			task = tasks.shift()
-			if task
-				task().then ->
-					load tasks
-			else
-				console.log '>> Page loaded.'
-
 		page.reduce (p, id) ->
-			p.then ->
-				load_img($cols, id)
+			p.then load_img($cols, id)
 		, Q()
-		.done()
+		.done ->
+			is_loading = false
 
 		page_num++
-
-		setTimeout ->
-			is_loading = false
-		, 500
 
 init_dashbaord()
 load_images()

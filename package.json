@@ -1,6 +1,6 @@
 {
   "name": "yande.re",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "description": "A web crawler for yande.re",
   "main": "app.coffee",
   "scripts": {
