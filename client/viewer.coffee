@@ -99,6 +99,7 @@ load_images = ->
 			return
 
 		total = count // 50
+		$('#dashboard .page').attr 'max', total
 		page_indicator = $("<h3 class='page_num' num='#{page_num}'><a href='/'>&lt;&lt;</a> Page: #{page_num} / #{total}</h3>")
 		page_indicators.push page_indicator
 		$img_list_view.append page_indicator
