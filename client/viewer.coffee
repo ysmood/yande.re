@@ -82,6 +82,13 @@ page_num = get_query('page') or 0
 load_images = ->
 	return if is_loading
 
+	col_num = get_query('col') or 4
+
+	# Memory leak
+	if $('.img_list_view .col').length >= col_num * 5
+		location.reload()
+		return
+
 	console.log '>> load images'
 
 	is_loading = true
@@ -91,12 +98,12 @@ load_images = ->
 			is_loading = false
 			return
 
-		page_indicator = $("<h3 class='page_num' num='#{page_num}'><a href='/'>&lt;&lt;</a> Page: #{page_num}</h3>")
+		total = count // 50
+		page_indicator = $("<h3 class='page_num' num='#{page_num}'><a href='/'>&lt;&lt;</a> Page: #{page_num} / #{total}</h3>")
 		page_indicators.push page_indicator
 		$img_list_view.append page_indicator
 
 		$cols = []
-		col_num = get_query('col') or 4
 		for i in [0...col_num]
 			$col = $("<div class='col' style='width: #{100 / col_num}%'></div>")
 			$img_list_view.append $col
@@ -108,7 +115,9 @@ load_images = ->
 			p.then load_img($cols, id)
 		, Q()
 		.done ->
-			is_loading = false
+			setTimeout ->
+				is_loading = false
+			, 500
 
 		page_num++
 
