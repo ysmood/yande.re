@@ -7,31 +7,29 @@
 <body>
 
 <div id="main">
-	<div class="help">
-		<form id="dashboard" action="/viewer">
-			<label>
-				Tags
-				<input class="tags" name="tags" type="text">
-			</label>
-			<label>
-				Ratings
-				<input class="ratings" name="ratings" type="text">
-			</label>
-			<label>
-				Score
-				<input class="score" name="score" type="number" min='0' max='1000000'>
-			</label>
-			<label>
-				Page
-				<input class="page" name="page" type="number" min='0' max='1000000'>
-			</label>
-			<label>
-				Columns
-				<input class="col" name="col" type="number" min='1' max='30'>
-			</label>
-			<input type="submit" value="search">
-		</form>
-	</div>
+	<form id="dashboard" action="/viewer">
+		<label>
+			Tags
+			<input class="tags" name="tags" type="text">
+		</label>
+		<label>
+			Ratings
+			<input class="ratings" name="ratings" type="text">
+		</label>
+		<label>
+			Score
+			<input class="score" name="score" type="number" min='0' max='1000000'>
+		</label>
+		<label>
+			Page
+			<input class="page" name="page" type="number" min='0' max='1000000'>
+		</label>
+		<label>
+			Columns
+			<input class="col" name="col" type="number" min='1' max='30'>
+		</label>
+		<input type="submit" value="search">
+	</form>
 
 	<div class="img_list_view">
 	</div>
