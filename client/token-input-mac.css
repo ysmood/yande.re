@@ -118,8 +118,9 @@ div.token-input-dropdown-mac {
     border-top: none;
     left: -1px;
     right: -1px;
+    max-height: 800px;
     background-color: #fff;
-    overflow: hidden;
+    overflow: auto;
     cursor: default;
     font-size: 10pt;
     font-family: "Lucida Grande", Arial, serif;

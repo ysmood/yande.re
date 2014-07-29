@@ -20,9 +20,6 @@ nobone = require 'nobone'
 	renderer: {}
 }
 
-db.posts = []
-db.tags = []
-
 class Get_page
 
 	@all_done: false
@@ -368,11 +365,14 @@ init_web = ->
 
 	service.get '/tags', (req, res) ->
 		ret = []
+		limit = 50
 		if req.query.q
 			query = req.query.q
 			for tag, i in db.tags
 				if tag.indexOf(query) == 0
 					ret.push { id: i, name: tag }
+					if ret.length == limit
+						break
 		res.send ret
 
 	service.get '/page/:num', (req, res) ->
@@ -439,18 +439,24 @@ reload_post_db = ->
 	rl.on 'line', (line) ->
 		try
 			post = JSON.parse line
+			db.posts.push post
 
 			for tag in post.tags
-				if db.tags.indexOf(tag) == -1
-					db.tags.push tag
-
-			db.posts.push post
+				if db.tags[tag] == undefined
+					db.tags[tag] = 0
+				else
+					db.tags[tag]++
 		catch err
 			kit.log err
 
 	rl.on 'close', ->
 		db.posts.sort (a, b) -> b.id - a.id
 		_.uniq db.posts, true, 'id'
+
+		db.tags = _.map(
+			_.pairs(db.tags).sort((a, b) -> b[1] - a[1])
+			(el) -> el[0]
+		)
 
 		kit.log 'Post db loaded: '.yellow + db.posts.length
 		defer.resolve()
