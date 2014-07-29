@@ -266,6 +266,10 @@ auto_update_duration = ->
 	, 500
 
 exit = (code = 0) ->
+	if exit.is_exited
+		return
+	exit.is_exited = true
+
 	ids = []
 	task_list.forEach (el) ->
 		ids.push(el.id) if _.has el, 'id'
