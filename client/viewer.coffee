@@ -49,9 +49,13 @@ init_dashbaord = ->
 
 init_tag_input = ->
 	$tags = $('#dashboard .tags')
+
+	tags = decodeURIComponent(get_query 'tags').split(',')
+
 	$tags.tokenInput '/tags', {
 		theme: 'mac'
 		preventDuplicates: true
+		prePopulate: _.map tags, (el) -> { id: el, name: el }
 	}
 
 load_img = ($cols, id) ->

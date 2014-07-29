@@ -370,14 +370,14 @@ init_web = ->
 			query = req.query.q
 			for tag, i in db.tags
 				if tag.indexOf(query) == 0
-					ret.push { id: i, name: tag }
+					ret.push { id: tag, name: tag }
 					if ret.length == limit
 						break
 		res.send ret
 
 	service.get '/page/:num', (req, res) ->
 		if req.query.tags
-			tags = req.query.tags.split ' '
+			tags = req.query.tags.split ','
 		else
 			tags = null
 
