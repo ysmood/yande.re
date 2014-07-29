@@ -9,7 +9,6 @@ _ = require 'lodash'
 default_conf = require './conf.default'
 conf = _.defaults require('./conf'), default_conf
 task_list = []
-post_db = []
 
 nobone = require 'nobone'
 { kit, db, proxy, service, renderer } = nobone {
@@ -20,6 +19,9 @@ nobone = require 'nobone'
 	service: {}
 	renderer: {}
 }
+
+db.posts = []
+db.tags = []
 
 class Get_page
 
@@ -281,6 +283,22 @@ exit = (code = 0) ->
 	.done ->
 		process.exit code
 
+binary_search = (arr, ele) ->
+	beginning = 0
+	end = arr.length
+	target = null
+	while true
+		target = ((beginning + end) >> 1);
+		if ((target == end || target == beginning) && arr[target] != ele)
+			return -1;
+
+		if arr[target] > ele
+			end = target
+		else if arr[target] < ele
+			beginning = target
+		else
+			return target
+
 init_web = ->
 	service.get '/', (req, res) ->
 		renderer.render 'ejs/index.ejs'
@@ -310,7 +328,7 @@ init_web = ->
 			res.status(200).end()
 
 	service.get '/unload_post_db', (req, res) ->
-		post_db = []
+		db.posts = []
 		res.status(200).end()
 
 	service.get '/post/:id', (req, res) ->
@@ -344,6 +362,15 @@ init_web = ->
 
 	service.get '/viewer', viewer
 
+	service.get '/tags', (req, res) ->
+		ret = []
+		if req.query.q
+			query = req.query.q
+			for tag, i in db.tags
+				if tag.indexOf(query) == 0
+					ret.push { id: i, name: tag }
+		res.send ret
+
 	service.get '/page/:num', (req, res) ->
 		if req.query.tags
 			tags = req.query.tags.split ' '
@@ -361,7 +388,7 @@ init_web = ->
 			ratings = ['s', 'q', 'e']
 
 		ids = []
-		_.each post_db, (el) ->
+		_.each db.posts, (el) ->
 			if el.score < score
 				return
 			if ratings.indexOf(el.rating) == -1
@@ -395,7 +422,8 @@ reload_post_db = ->
 	readline = require 'readline'
 	db_file = kit.fs.createReadStream 'yande.post.db', 'utf8'
 
-	post_db = []
+	db.posts = []
+	db.tags = []
 
 	rl = readline.createInterface {
 		input: db_file
@@ -407,14 +435,20 @@ reload_post_db = ->
 	rl.on 'line', (line) ->
 		try
 			post = JSON.parse line
-			post_db.push post
+
+			for tag in post.tags
+				if db.tags.indexOf(tag) == -1
+					db.tags.push tag
+
+			db.posts.push post
 		catch err
 			kit.log err
 
 	rl.on 'close', ->
-		post_db.sort (a, b) -> b.id - a.id
-		_.uniq post_db, true, 'id'
-		kit.log 'Post db loaded: '.yellow + post_db.length
+		db.posts.sort (a, b) -> b.id - a.id
+		_.uniq db.posts, true, 'id'
+
+		kit.log 'Post db loaded: '.yellow + db.posts.length
 		defer.resolve()
 
 	defer.promise
@@ -456,5 +490,6 @@ launch = ->
 
 		init_web()
 		reload_post_db()
+
 
 launch()
