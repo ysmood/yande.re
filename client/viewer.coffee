@@ -43,7 +43,7 @@ init_dashbaord = ->
 	$page = $('#dashboard .page')
 	$col = $('#dashboard .col')
 
-	$tags.val get_query('tags')
+	$tags.val decodeURIComponent(get_query('tags'))
 	$ratings.val get_query('ratings')
 	$score.val get_query('score')
 	$page.val get_query('page')

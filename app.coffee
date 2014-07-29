@@ -346,7 +346,7 @@ init_web = ->
 
 	service.get '/page/:num', (req, res) ->
 		if req.query.tags
-			tags = req.query.tags.split ','
+			tags = req.query.tags.split ' '
 		else
 			tags = null
 
