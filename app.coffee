@@ -39,9 +39,7 @@ class Page_worker
 					redirect: 3
 				}
 			.then (body) ->
-				if not body
-					work.stop_timer()
-					return
+				return if not body
 
 				list = JSON.parse(body)
 
@@ -106,7 +104,7 @@ class Page_worker
 
 				if work.is_all_done()
 					Page_worker.all_done = true
-					kit.log 'Page_worker All_done'.yellow
+					kit.log 'Pages Done'.yellow
 
 		Page_worker.url_iter().done download
 
