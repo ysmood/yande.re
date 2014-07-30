@@ -138,7 +138,7 @@ class File_worker
 			jdb.save jdb.doc.post_list.shift()
 		.then (id) ->
 			if not id
-				if Page_worker.all_done and work.count() == 0
+				if Page_worker.all_done and work.count == 0
 					work.stop_timer()
 					clearInterval auto_update_duration.tmr
 					kit.log "All done.".green
@@ -164,6 +164,7 @@ class File_worker
 				if not exists
 					kit.mkdirs dir
 			.then ->
+				kit.log 'Download: '.cyan + url
 				f_stream = kit.fs.createWriteStream path
 				kit.request {
 					url: url
@@ -225,24 +226,21 @@ monitor = (task, max_tasks = 10, span = 100) ->
 	count = 0
 	is_all_done = false
 
-	work = {
-		count: -> count
-		done: (ref) ->
-			count--
-			_.remove task_list, (el) -> ref == el
-		stop_timer: ->
-			is_all_done = true
-			clearInterval timer
-			kit.log 'Timer stopped:'.yellow
-		is_all_done: ->
-			is_all_done and count == 0
-	}
-
 	run = ->
 		n = max_tasks - count
 		_.times n, ->
-			count++
-			task_list.push(new task(work))
+			task_list.push(new task({
+				count: count++
+				done: (ref) ->
+					count--
+					_.remove task_list, (el) -> ref == el
+				stop_timer: ->
+					is_all_done = true
+					clearInterval timer
+					kit.log 'Timer stopped:'.yellow
+				is_all_done: ->
+					is_all_done and count == 0
+			}))
 
 	run()
 
