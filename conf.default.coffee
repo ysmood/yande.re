@@ -23,8 +23,8 @@ module.exports = {
 	# Automatically open the monitor page.
 	auto_open_page: true
 
-	page_worker: 1
+	page_worker_num: 1
 
-	file_worker: 10
+	file_worker_num: 10
 
 }

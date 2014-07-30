@@ -111,20 +111,25 @@ class Page_worker
 		Page_worker.url_iter().done download
 
 	@url_iter: ->
-		if conf.mode == 'err'
-			db.exec (jdb) ->
-				url = jdb.doc.err_page_urls.shift()
-				jdb.save url
-		else
-			Q kit.url.format {
-				protocol: 'https'
-				host: 'yande.re'
-				pathname: 'post.json'
-				query:
-					tags: conf.tags
-					page: ++Page_worker.page_num
-					limit: 50
-			}
+		db.exec (jdb) ->
+			jdb.send jdb.doc.post_list.length > 1000
+		.then (too_many_tasks) ->
+			return if too_many_tasks
+
+			if conf.mode == 'err'
+				db.exec (jdb) ->
+					url = jdb.doc.err_page_urls.shift()
+					jdb.save url
+			else
+				kit.url.format {
+					protocol: 'https'
+					host: 'yande.re'
+					pathname: 'post.json'
+					query:
+						tags: conf.tags
+						page: ++Page_worker.page_num
+						limit: 50
+				}
 
 class File_worker
 
@@ -222,7 +227,7 @@ init_basic = ->
 		Page_worker.page_num = 0
 
 # Monitor design mode.
-monitor = (task, max_tasks = 10, span = 10) ->
+monitor = (task, max_tasks = 10, span = 100) ->
 	count = 0
 	is_all_done = false
 
@@ -471,31 +476,13 @@ init_err_handlers = ->
 		exit 1
 
 launch = ->
-	# kit.readdir 'post'
-	# .then (post_ids) ->
-	# 	kit.glob conf.url_key + '/*/*'
-	# 	.then (url_paths) ->
-	# 		for path, i in url_paths
-	# 			url_paths[i] = kit.path.basename(
-	# 				path
-	# 				kit.path.extname path
-	# 			)
-
-	# 		ids = _.difference post_ids, url_paths
-	# 		kit.log 'Diff: '.cyan + ids.length
-	# 		if ids.length > 0
-	# 			db.exec ids.map((el) -> +el), (jdb, ids) ->
-	# 				jdb.doc.post_list = ids
-	# 				jdb.save()
-	# .done()
-
 	db.loaded.done ->
 		init_basic()
 		init_err_handlers()
 
 		if conf.mode != 'view'
-			monitor Page_worker, 1, 1000 * 30
-			monitor File_worker
+			monitor Page_worker, conf.page_worker_num
+			monitor File_worker, conf.file_worker_num
 			auto_update_duration()
 
 		init_web()
