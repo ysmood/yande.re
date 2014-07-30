@@ -20,7 +20,7 @@ nobone = require 'nobone'
 	renderer: {}
 }
 
-class Get_page
+class Page_worker
 
 	@all_done: false
 
@@ -86,7 +86,7 @@ class Get_page
 
 				db.exec {
 					url
-					num: Get_page.page_num
+					num: Page_worker.page_num
 					list: list.map((el) -> el.id)
 				}, (jdb, data) ->
 					jdb.doc.page_num = data.num
@@ -105,10 +105,10 @@ class Get_page
 				work.done self
 
 				if work.is_all_done()
-					Get_page.all_done = true
-					kit.log 'Get_page All_done'.yellow
+					Page_worker.all_done = true
+					kit.log 'Page_worker All_done'.yellow
 
-		Get_page.url_iter().done download
+		Page_worker.url_iter().done download
 
 	@url_iter: ->
 		if conf.mode == 'err'
@@ -122,11 +122,11 @@ class Get_page
 				pathname: 'post.json'
 				query:
 					tags: conf.tags
-					page: ++Get_page.page_num
+					page: ++Page_worker.page_num
 					limit: 50
 			}
 
-class Download_url
+class File_worker
 
 	@last_download: null
 
@@ -139,7 +139,7 @@ class Download_url
 			jdb.save jdb.doc.post_list.shift()
 		.then (id) ->
 			if not id
-				if Get_page.all_done and work.count == 0
+				if Page_worker.all_done and work.count == 0
 					work.stop_timer()
 					clearInterval auto_update_duration.tmr
 					kit.log "All done.".green
@@ -173,7 +173,7 @@ class Download_url
 					agent: conf.agent
 				}
 			.then ->
-				Download_url.last_download = post.id
+				File_worker.last_download = post.id
 				db.exec (jdb) ->
 					jdb.doc.download_count++
 					jdb.save()
@@ -212,14 +212,14 @@ init_basic = ->
 		jdb.save()
 
 	db.exec (jdb) ->
-		Get_page.page_num = jdb.doc.page_num
+		Page_worker.page_num = jdb.doc.page_num
 
 		jdb.doc.err_page_urls = []
 		for k, v of jdb.doc.err_pages
 			jdb.doc.err_page_urls.push k
 
 	if conf.mode == 'diff'
-		Get_page.page_num = 0
+		Page_worker.page_num = 0
 
 # Monitor design mode.
 monitor = (task, max_tasks = 10, span = 10) ->
@@ -319,7 +319,7 @@ init_web = ->
 				duration: jdb.doc.duration
 				err_count: _.keys(jdb.doc.err_pages).length + _.keys(jdb.doc.err_posts).length
 				mem_usage: process.memoryUsage()
-				last_download: Download_url.last_download
+				last_download: File_worker.last_download
 			}
 		.then (data) ->
 			res.send data
@@ -494,8 +494,8 @@ launch = ->
 		init_err_handlers()
 
 		if conf.mode != 'view'
-			monitor Get_page, 1, 1000 * 30
-			monitor Download_url
+			monitor Page_worker, 1, 1000 * 30
+			monitor File_worker
 			auto_update_duration()
 
 		init_web()
