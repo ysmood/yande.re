@@ -27,8 +27,6 @@ class Page_worker
 	constructor: (work) ->
 		self = @
 
-		work.start()
-
 		download = (url) ->
 			Q.fcall ->
 				return if not url
@@ -136,13 +134,11 @@ class File_worker
 	constructor: (work) ->
 		self = @
 
-		work.start()
-
 		db.exec (jdb) ->
 			jdb.save jdb.doc.post_list.shift()
 		.then (id) ->
 			if not id
-				if Page_worker.all_done and work.count == 0
+				if Page_worker.all_done and work.count() == 0
 					work.stop_timer()
 					clearInterval auto_update_duration.tmr
 					kit.log "All done.".green
@@ -230,10 +226,9 @@ monitor = (task, max_tasks = 10, span = 100) ->
 	is_all_done = false
 
 	work = {
-		start: ->
-			++count
+		count: -> count
 		done: (ref) ->
-			--count
+			count--
 			_.remove task_list, (el) -> ref == el
 		stop_timer: ->
 			is_all_done = true
@@ -244,10 +239,10 @@ monitor = (task, max_tasks = 10, span = 100) ->
 	}
 
 	run = ->
-		if count > max_tasks
-			return
-		work.count = count
-		task_list.push(new task(work))
+		n = max_tasks - count
+		_.times n, ->
+			count++
+			task_list.push(new task(work))
 
 	run()
 
