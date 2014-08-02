@@ -112,10 +112,10 @@ load_images = ->
 
 		tasks = page.map (id) -> -> load_img($cols, id)
 
-		page.reduce (p, id) ->
-			p.then load_img($cols, id)
-		, Q()
+		Q.all page.map (id) ->
+			load_img($cols, id)
 		.done ->
+			console.log 'Load page: ' + page_num
 			setTimeout ->
 				is_loading = false
 			, 500
