@@ -298,7 +298,7 @@ binary_search = (arr, ele) ->
 			return target
 
 init_web = ->
-	service.get '/monitor', (req, res) ->
+	service.get '/', (req, res) ->
 		renderer.render 'ejs/index.ejs'
 		.done (tpl) ->
 			res.send tpl({
@@ -358,7 +358,7 @@ init_web = ->
 		.done (tpl) ->
 			res.send tpl()
 
-	service.get '/', viewer
+	service.get '/viewer', viewer
 
 	service.get '/tags', (req, res) ->
 		ret = []
