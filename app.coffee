@@ -86,7 +86,8 @@ class Page_worker
 					list: list.map((el) -> el.id)
 				}, (jdb, data) ->
 					jdb.doc.page_num = data.num
-					jdb.doc.post_list = _.union jdb.doc.post_list, data.list
+					for el in data.list
+						jdb.doc.post_list.push el if jdb.doc.post_list.indexOf(el) == -1
 					delete jdb.doc.err_pages[data.url]
 					jdb.save()
 			.catch (err) ->
@@ -297,7 +298,7 @@ binary_search = (arr, ele) ->
 			return target
 
 init_web = ->
-	service.get '/', (req, res) ->
+	service.get '/monitor', (req, res) ->
 		renderer.render 'ejs/index.ejs'
 		.done (tpl) ->
 			res.send tpl({
@@ -357,7 +358,7 @@ init_web = ->
 		.done (tpl) ->
 			res.send tpl()
 
-	service.get '/viewer', viewer
+	service.get '/', viewer
 
 	service.get '/tags', (req, res) ->
 		ret = []
