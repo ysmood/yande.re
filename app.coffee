@@ -228,6 +228,8 @@ monitor = (task, max_tasks = 10) ->
 	is_all_done = false
 
 	run = ->
+		return if is_all_done
+
 		defer = Q.defer()
 		task_list.push(new task({
 			count: count++
@@ -240,14 +242,9 @@ monitor = (task, max_tasks = 10) ->
 			is_all_done: ->
 				is_all_done and count == 0
 		}))
-
-		if is_all_done
-			return
-		else
-			defer.promise
+		defer.promise
 
 	kit.async max_tasks, run, false
-
 
 auto_update_duration = ->
 	# Calc the download duration.
