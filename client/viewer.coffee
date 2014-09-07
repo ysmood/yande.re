@@ -85,9 +85,8 @@ load_images = ->
 	col_num = get_query('col') or 4
 
 	# Memory leak
-	if $('.img_list_view .col').length >= col_num * 5
-		location.reload()
-		return
+	if $('.img_list_view .col').length >= col_num * 3
+		$('.page_num:last').prevAll().remove()
 
 	console.log '>> load images'
 
