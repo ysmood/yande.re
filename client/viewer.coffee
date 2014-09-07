@@ -174,6 +174,9 @@ $img_list_view
 
 	$tools.find('.open').attr 'href', "https://yande.re/post/show/" + id
 	$tools.find('.download').attr 'href', '/download/' + id
+.on 'mouseleave', '.img', ->
+	$tools.hide().offset({ left: -1000, top: -1000 })
+
 
 $img_show.on 'click', (e) ->
 	if not $.contains $post_info[0], e.target
