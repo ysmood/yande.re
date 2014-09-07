@@ -223,29 +223,31 @@ init_basic = ->
 		Page_worker.page_num = 0
 
 # Monitor design mode.
-monitor = (task, max_tasks = 10, span = 100) ->
+monitor = (task, max_tasks = 10) ->
 	count = 0
 	is_all_done = false
 
 	run = ->
-		n = max_tasks - count
-		_.times n, ->
-			task_list.push(new task({
-				count: count++
-				done: (ref) ->
-					count--
-					_.remove task_list, (el) -> ref == el
-				stop_timer: ->
-					is_all_done = true
-					clearInterval timer
-					kit.log 'Timer stopped:'.yellow
-				is_all_done: ->
-					is_all_done and count == 0
-			}))
+		defer = Q.defer()
+		task_list.push(new task({
+			count: count++
+			done: (ref) ->
+				count--
+				_.remove task_list, (el) -> ref == el
+				defer.resolve()
+			stop_timer: ->
+				is_all_done = true
+			is_all_done: ->
+				is_all_done and count == 0
+		}))
 
-	run()
+		if is_all_done
+			return
+		else
+			defer.promise
 
-	timer = setInterval run, span
+	kit.async max_tasks, run, false
+
 
 auto_update_duration = ->
 	# Calc the download duration.
