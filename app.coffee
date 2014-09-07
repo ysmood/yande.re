@@ -42,7 +42,7 @@ class Page_worker
 				list = JSON.parse(body)
 
 				if list.length == 0
-					work.stop_timer()
+					work.stop_new_task()
 					return
 
 				# Save post list to disk.
@@ -55,7 +55,7 @@ class Page_worker
 						if exists
 							if ++exists_count == list.length and
 							conf.mode == 'diff'
-								work.stop_timer()
+								work.stop_new_task()
 								nothing_new = true
 						else
 							kit.appendFile 'yande.post.db', JSON.stringify({
@@ -101,10 +101,6 @@ class Page_worker
 			.fin ->
 				work.done self
 
-				if work.is_all_done()
-					Page_worker.all_done = true
-					kit.log 'Pages Done'.yellow
-
 		Page_worker.url_iter().done download
 
 	@url_iter: ->
@@ -139,10 +135,9 @@ class File_worker
 			jdb.save jdb.doc.post_list.shift()
 		.then (id) ->
 			if not id
-				if Page_worker.all_done and work.count == 0
-					work.stop_timer()
+				if Page_worker.all_done
+					work.stop_new_task()
 					clearInterval auto_update_duration.tmr
-					kit.log "All done.".green
 				return
 
 			self.id = id
@@ -224,27 +219,28 @@ init_basic = ->
 
 # Monitor design mode.
 monitor = (task, max_tasks = 10) ->
-	count = 0
-	is_all_done = false
+	no_new_task = false
 
 	run = ->
-		return if is_all_done
+		return if no_new_task
 
 		defer = Q.defer()
 		task_list.push(new task({
-			count: count++
 			done: (ref) ->
-				count--
 				_.remove task_list, (el) -> ref == el
 				defer.resolve()
-			stop_timer: ->
-				is_all_done = true
-			is_all_done: ->
-				is_all_done and count == 0
+			stop_new_task: ->
+				no_new_task = true
 		}))
 		defer.promise
 
 	kit.async max_tasks, run, false
+	.done ->
+		task.all_done = true
+		kit.log "#{task.name} Done".yellow
+
+		if task.name == 'File_worker'
+			kit.log "All done.".green
 
 auto_update_duration = ->
 	# Calc the download duration.
