@@ -299,7 +299,7 @@ binary_search = (arr, ele) ->
 
 init_web = ->
 	service.get '/', (req, res) ->
-		renderer.render 'ejs/index.ejs'
+		renderer.render 'ejs/index.html'
 		.done (tpl) ->
 			res.send tpl({
 				conf
@@ -354,7 +354,7 @@ init_web = ->
 			res.redirect post.jpeg_url
 
 	viewer = (req, res) ->
-		renderer.render 'ejs/viewer.ejs'
+		renderer.render 'ejs/viewer.html'
 		.done (tpl) ->
 			res.send tpl()
 
