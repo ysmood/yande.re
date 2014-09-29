@@ -98,7 +98,7 @@ class Page_worker
 				}, (jdb, data) ->
 					jdb.doc.err_pages[data.url] = data.err
 					jdb.save()
-			.fin ->
+			.done ->
 				work.done self
 
 		Page_worker.url_iter().done download
@@ -184,7 +184,7 @@ class File_worker
 					jdb.doc.err_posts[data.id] = data.err
 					jdb.doc.post_list.push data.id
 					jdb.save()
-		.fin ->
+		.done ->
 			work.done self
 
 init_basic = ->
